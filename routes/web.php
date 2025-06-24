@@ -20,7 +20,7 @@ use App\Http\Middleware\EnsureTokenIsValid;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('auth.index');
 });
 
 Route::controller(AuthController::class)->name('auth.')->group(function () {
