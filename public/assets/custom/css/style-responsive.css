@@ -1,0 +1,693 @@
+/* RESPONSIVE */
+
+@media (min-width: 360px) and (max-width: 480px) {
+
+    /* HEADER NAVIGATION */
+
+    .header-nav-primary-msi.hnpmsi{
+        display: none;
+    }
+
+    .header-nav-primary-msi{
+        top: 0px;
+    }
+
+    .second-header nav.navbar a.navbar-brand img {
+        max-width: 180px;
+        min-width: 180px;
+    }
+
+    .icons-header-mobile{
+        display: none;
+    }
+
+    .fables-light-background-color .navbar-toggler span {
+        color: #0253a5 !important;
+    }
+
+    .header-nav-primary-msi .navbar-collapse{
+        border-top: 1px #d9d9d9 solid;
+        margin-top: 5px;
+    }
+
+    .btco-hover-menu .collapse ul ul, .btco-hover-menu .collapse ul ul.dropdown-menu {
+        background: #e9e9e9;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item ul.dropdown-menu{
+        padding-left: 5px;
+    }
+
+    /* FOOTER */
+
+    .col-animation-footer {
+        display: none;
+    }
+
+    .fables-light-footer-links{
+        margin-bottom: 25px !important;
+    }
+
+    .fables-footer ul.nav.fables-footer-links{
+        margin-bottom: 15px;
+    }
+
+    /* MODAL POPUP */
+
+    .modal-open .modal{
+        align-content: center;
+    }
+
+    .modal.show .modal-dialog{
+        top: 0 !important;
+    }
+
+    /* HOMEPAGE */
+
+    .banner-video{
+        min-height: 250px;
+        max-height: 250px;
+    }
+
+    /* BG SLIDE PRODUCTS - HOMEPAGE */
+
+    .products-truck-slide .owl-theme .owl-nav {
+        margin-top: 0px;
+        position: absolute;
+        top: 40%;
+        width: 100%;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-prev {
+        left: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-next {
+        right: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    /* OUR PARTNER - HOME PAGE */
+
+    .fables-light-overlay.fables-after-overlay::after{
+        border-radius: 8px;
+    }
+
+    .section-vehicle-service .fables-partner-carousel-img{
+        max-width: 100%;
+    }
+
+    .section-vehicle-service p{
+        margin-top: 5px !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* CAMPAIGN SLIDE - HOME PAGE */
+
+    .gallery-campaign-home-page {
+        margin-top: 4rem !important;
+        margin-bottom: 3rem !important;
+    }
+
+    .gallery-campaign-home-page iframe {
+        height: 160px !important;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-prev, 
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-next{
+        font-size: 21px;
+        top: 28%;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-dots{
+        bottom: 12px;
+        left: 42%;
+    }
+
+    /* UNDER MAINTENANCE */
+
+    /*.img-under-maintenance{
+        max-width: 200px;
+        min-width: 200px;
+    }
+
+    .section-404 p {
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+    .section-404 .btn{
+        line-height: 1.8;
+    }*/
+
+}
+
+@media (min-width: 481px) and (max-width: 680px) {
+
+    /* HEADER NAVIGATION */
+
+    .header-nav-primary-msi.hnpmsi{
+        display: none;
+    }
+
+    .header-nav-primary-msi{
+        top: 0px;
+    }
+
+    .second-header nav.navbar a.navbar-brand img {
+        max-width: 180px;
+        min-width: 180px;
+    }
+
+    .icons-header-mobile{
+        display: none;
+    }
+
+    .fables-light-background-color .navbar-toggler span {
+        color: #0253a5 !important;
+    }
+
+    .header-nav-primary-msi .navbar-collapse{
+        border-top: 1px #d9d9d9 solid;
+        margin-top: 5px;
+    }
+
+    .btco-hover-menu .collapse ul ul, .btco-hover-menu .collapse ul ul.dropdown-menu {
+        background: #e9e9e9;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item ul.dropdown-menu{
+        padding-left: 5px;
+    }
+
+    /* FOOTER */
+
+    .col-animation-footer {
+        display: none;
+    }
+
+    .fables-light-footer-links{
+        margin-bottom: 25px !important;
+    }
+
+    .fables-footer ul.nav.fables-footer-links{
+        margin-bottom: 15px;
+    }
+
+    /* HOMEPAGE */
+
+    .banner-video{
+        min-height: 250px;
+        max-height: 250px;
+    }
+
+    /* BG SLIDE PRODUCTS - HOMEPAGE */
+
+    .products-truck-slide .owl-theme .owl-nav {
+        margin-top: 0px;
+        position: absolute;
+        top: 40%;
+        width: 100%;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-prev {
+        left: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-next {
+        right: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    /* OUR PARTNER - HOME PAGE */
+
+    .fables-light-overlay.fables-after-overlay::after{
+        border-radius: 8px;
+    }
+
+    .section-vehicle-service .fables-partner-carousel-img{
+        max-width: 100%;
+    }
+
+    .section-vehicle-service p{
+        margin-top: 5px !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* CAMPAIGN SLIDE - HOME PAGE */
+
+    .gallery-campaign-home-page {
+        margin-top: 4rem !important;
+        margin-bottom: 3rem !important;
+    }
+
+    .gallery-campaign-home-page iframe {
+        height: 160px !important;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-prev, 
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-next{
+        font-size: 21px;
+        top: 28%;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-dots{
+        bottom: 12px;
+        left: 42%;
+    }
+
+}
+
+@media (min-width: 681px) and (max-width: 768px) {
+
+    /* HEADER NAVIGATION */
+
+    .fables-top-header-signin.header-nav-primary-msi.hnpmsi{
+        display: none;
+    }
+
+    #header_nav_primary_msi .col-12.col-md-10.col-lg-11.pr-md-0 {
+        -ms-flex: 100%;
+        flex: 100%;
+        max-width: 100%;
+    }
+
+    .header-nav-primary-msi{
+        top: 0px;
+    }
+
+    .second-header nav.navbar a.navbar-brand img {
+        max-width: 180px;
+        min-width: 180px;
+    }
+
+    .icons-header-mobile{
+        display: none;
+    }
+
+    .fables-light-background-color .navbar-toggler span {
+        color: #0253a5 !important;
+    }
+
+    .header-nav-primary-msi .navbar-collapse{
+        border-top: 0px #d9d9d9 solid;
+        margin-top: 5px;
+    }
+
+    .btco-hover-menu .collapse ul ul, .btco-hover-menu .collapse ul ul.dropdown-menu {
+        background: #e9e9e9;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item ul.dropdown-menu{
+        padding-left: 5px;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item.dropdown{
+        margin-right: 0;
+    }
+
+    .fables-nav .dropdown-toggle::after{
+        margin-left: .5em;
+        margin-right: 0;
+    }
+
+    /* FOOTER */
+
+    .col-animation-footer {
+        display: none;
+    }
+
+    .fables-light-footer-links{
+        margin-bottom: 25px !important;
+    }
+
+    .fables-footer ul.nav.fables-footer-links{
+        margin-bottom: 15px;
+    }
+
+    /* HOMEPAGE */
+
+    .banner-video{
+        min-height: 250px;
+        max-height: 250px;
+    }
+
+    /* BG SLIDE PRODUCTS - HOMEPAGE */
+
+    .products-truck-slide .owl-theme .owl-nav {
+        margin-top: 0px;
+        position: absolute;
+        top: 40%;
+        width: 100%;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-prev {
+        left: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-next {
+        right: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    /* OUR PARTNER - HOME PAGE */
+
+    .fables-light-overlay.fables-after-overlay::after{
+        border-radius: 8px;
+    }
+
+    .section-vehicle-service .fables-partner-carousel-img{
+        max-width: 100%;
+    }
+
+    .section-vehicle-service p{
+        margin-top: 5px !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* CAMPAIGN SLIDE - HOME PAGE */
+
+    .gallery-campaign-home-page {
+        margin-top: 4rem !important;
+        margin-bottom: 3rem !important;
+    }
+
+    .gallery-campaign-home-page iframe {
+        height: 160px !important;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-prev, 
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-next{
+        font-size: 31px;
+        top: 35%;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-dots{
+        bottom: 20px;
+        left: 45%;
+    }
+
+}
+
+@media (min-width: 769px) and (max-width: 990px) {
+
+    /* HEADER NAVIGATION */
+
+    .fables-top-header-signin.header-nav-primary-msi.hnpmsi{
+        display: none;
+    }
+
+    #header_nav_primary_msi .col-12.col-md-10.col-lg-11.pr-md-0 {
+        -ms-flex: 100%;
+        flex: 100%;
+        max-width: 100%;
+    }
+
+    .header-nav-primary-msi{
+        top: 0px;
+    }
+
+    .second-header nav.navbar a.navbar-brand img {
+        max-width: 180px;
+        min-width: 180px;
+    }
+
+    .icons-header-mobile{
+        display: none;
+    }
+
+    .fables-light-background-color .navbar-toggler span {
+        color: #0253a5 !important;
+    }
+
+    .header-nav-primary-msi .navbar-collapse{
+        border-top: 0px #d9d9d9 solid;
+        margin-top: 5px;
+    }
+
+    .btco-hover-menu .collapse ul ul, .btco-hover-menu .collapse ul ul.dropdown-menu {
+        background: #e9e9e9;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item ul.dropdown-menu{
+        padding-left: 5px;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item.dropdown{
+        margin-right: 0;
+    }
+
+    .fables-nav .dropdown-toggle::after{
+        margin-left: .5em;
+        margin-right: 0;
+    }
+
+    /* FOOTER */
+
+    .col-animation-footer {
+        display: none;
+    }
+
+    .fables-light-footer-links{
+        margin-bottom: 25px !important;
+    }
+
+    .fables-footer ul.nav.fables-footer-links{
+        margin-bottom: 15px;
+    }
+
+    /* HOMEPAGE */
+
+    .banner-video{
+        min-height: 350px;
+        max-height: 350px;
+        margin-top: 7%;
+    }
+
+    /* BG SLIDE PRODUCTS - HOMEPAGE */
+
+    .products-truck-slide .owl-theme .owl-nav {
+        margin-top: 0px;
+        position: absolute;
+        top: 40%;
+        width: 100%;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-prev {
+        left: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-next {
+        right: 16%;
+        position: absolute;
+        margin: 0;
+    }
+
+    /* OUR PARTNER - HOME PAGE */
+
+    .fables-light-overlay.fables-after-overlay::after{
+        border-radius: 8px;
+    }
+
+    .section-vehicle-service .fables-partner-carousel-img{
+        max-width: 100%;
+    }
+
+    .section-vehicle-service p{
+        margin-top: 5px !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* CAMPAIGN SLIDE - HOME PAGE */
+
+    .gallery-campaign-home-page {
+        margin-top: 4rem !important;
+        margin-bottom: 3rem !important;
+    }
+
+    .gallery-campaign-home-page iframe {
+        height: 160px !important;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-prev, 
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-next{
+        font-size: 33px;
+        top: 38%;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-dots{
+        bottom: 20px;
+        left: 45%;
+    }
+
+}
+
+@media (min-width: 991px) and (max-width: 1200px) {
+
+    .container {
+        max-width: 768px;
+    }
+
+    /* HEADER NAVIGATION */
+
+    .fables-top-header-signin.header-nav-primary-msi.hnpmsi{
+        display: none;
+    }
+
+    #header_nav_primary_msi .col-12.col-md-10.col-lg-11.pr-md-0 {
+        -ms-flex: 100%;
+        flex: 100%;
+        max-width: 100%;
+    }
+
+    .header-nav-primary-msi{
+        top: 0px;
+    }
+
+    .second-header nav.navbar a.navbar-brand img {
+        max-width: 180px;
+        min-width: 180px;
+    }
+
+    .icons-header-mobile{
+        display: none;
+    }
+
+    .fables-light-background-color .navbar-toggler span {
+        color: #0253a5 !important;
+    }
+
+    .header-nav-primary-msi .navbar-collapse{
+        border-top: 0px #d9d9d9 solid;
+        margin-top: 5px;
+    }
+
+    .btco-hover-menu .collapse ul ul, .btco-hover-menu .collapse ul ul.dropdown-menu {
+        background: #e9e9e9;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item ul.dropdown-menu{
+        padding-left: 5px;
+    }
+
+    .second-header nav.navbar ul.navbar-nav li.nav-item.dropdown{
+        margin-right: 15;
+    }
+
+    .fables-nav .dropdown-toggle::after{
+        margin-left: .25em;
+        margin-right: 0;
+    }
+
+    /* FOOTER */
+
+    .col-animation-footer {
+        display: none;
+    }
+
+    .fables-light-footer-links{
+        margin-bottom: 25px !important;
+    }
+
+    .fables-footer ul.nav.fables-footer-links{
+        margin-bottom: 15px;
+    }
+
+    /* HOMEPAGE */
+
+    .banner-video{
+        min-height: 350px;
+        max-height: 350px;
+        margin-top: 5.8%;
+    }
+
+    /* BG SLIDE PRODUCTS - HOMEPAGE */
+
+    .products-truck-slide .owl-theme .owl-nav {
+        margin-top: 0px;
+        position: absolute;
+        top: 40%;
+        width: 100%;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-prev {
+        left: 0;
+        position: absolute;
+        margin: 0;
+    }
+
+    .products-truck-slide .owl-theme .owl-nav .owl-next {
+        right: 16%;
+        position: absolute;
+        margin: 0;
+    }
+
+    /* OUR PARTNER - HOME PAGE */
+
+    .fables-light-overlay.fables-after-overlay::after{
+        border-radius: 8px;
+    }
+
+    .section-vehicle-service .fables-partner-carousel-img{
+        max-width: 100%;
+    }
+
+    .section-vehicle-service p{
+        margin-top: 5px !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* CAMPAIGN SLIDE - HOME PAGE */
+
+    .gallery-campaign-home-page {
+        margin-top: 4rem !important;
+        margin-bottom: 3rem !important;
+    }
+
+    .gallery-campaign-home-page iframe {
+        height: 160px !important;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-prev, 
+    .gallery-campaign-home-page .owl-carousel .owl-nav .owl-next{
+        font-size: 33px;
+        top: 38%;
+    }
+
+    .gallery-campaign-home-page .owl-carousel .owl-dots{
+        bottom: 20px;
+        left: 45%;
+    }
+
+}
+
+@media (min-width: 992px) and (max-width: 1200px) {
+
+    /* OUR PARTNER - HOME PAGE */
+
+    .fables-light-overlay.fables-after-overlay::after{
+        border-radius: 0px;
+    }
+
+}
+
+@media (min-width: 1025px) and (max-width: 1200px) {
+
+    /* CAMPAIGN SLIDE - HOME PAGE */
+
+    .products-truck-slide .owl-theme .owl-nav .owl-next{
+        right: 0;
+    }
+
+}
