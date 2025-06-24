@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Cookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Cookie;
 use App\Helpers;
 
 class AuthController extends Controller
@@ -24,11 +24,11 @@ class AuthController extends Controller
                     'username' => $username,
                     'password' => $password,
                 ];
-                $login = lgk_request('postraw', 'auth/signin', $data, [], 'api-gateway', true, false);
+                $login = lgk_request('postraw', 'auth/login', $data, [], 'api-gateway', true, false);
                 if ($login) {
-                    $access_token = $login['response']['bearer_token'];
-                    $refresh_token = $login['response']['bearer_token'];
-                    $expired_time = ($login['response']['exp'] / 60); //menit
+                    $access_token = $login['response']['data']['access_token'];
+                    $refresh_token = $login['response']['data']['access_token'];
+                    $expired_time = ($login['response']['data']['expires_in'] / 60); //menit
 
                     if ($req->has('remember')) {
                         $expires = 1440; // 24 jam
@@ -39,16 +39,11 @@ class AuthController extends Controller
                     Cookie::queue(Cookie::make('access_token', $access_token, $expires));
                     Cookie::queue(Cookie::make('refresh_token', $refresh_token, ($expires * 2)));
 
-                    $headers = ['Authorization' => 'Bearer '.$access_token];
-                    $callme = lgk_request('get', 'auth/me', [], $headers, 'api-gateway', true, false);
-                    Log::info($callme);
-                    $permission = json_encode($callme['response']['data']['permissions']);
-                    unset($callme['response']['data']['permissions']);
-                    $me = $callme['response']['data'];
-
+                    $permission = json_encode($login['response']['data']['system_access']);
+                    $me = $login['response']['data'];
                     Cookie::queue(Cookie::make('me', json_encode($me), $expires));
                     $req->session()->put('permission', $permission);
-                    session(['lifetime' => \Config::get('session.lifetime')]);
+                    session(['lifetime' => Config::get('session.lifetime')]);
                 } else {
                     //return back();
                     return view('login', [
@@ -73,12 +68,18 @@ class AuthController extends Controller
     {
         $me = json_decode(Cookie::get('me'));
         if ($me) {
-            Cache::forget('sidebar'.$me->users_id); //remove cache sidebar
+            Cache::forget('sidebar'.$me->userInfo->user->id); //remove cache sidebar
         }
 
         // revoke token first
         if (Cookie::get('access_token')) {
-            lgk_request('get', 'admin/logout', [], [], 'api-gateway', true);
+            try {
+                lgk_request('get', 'auth/logout', [], [], 'api-gateway', true);
+            } catch (\Exception $e) {
+                // Log the error but continue with local logout
+                Log::warning('Logout API call failed: ' . $e->getMessage());
+                // Continue with local logout even if API fails
+            }
         }
 
         Cookie::queue('access_token', null, -1);

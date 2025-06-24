@@ -81,7 +81,6 @@ if (! function_exists('lgk_request')) {
         }
         $status_code = $response->getStatusCode();
         $body = $response->getBody();
-
         if ($status_code == 200) {
             $status = json_decode($body);
             if (isset($status->status) && $status->status === false) {

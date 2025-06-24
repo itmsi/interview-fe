@@ -12,13 +12,7 @@ class DashboardController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        Log::info('test');
-        $call = lgk_request('get', 'admin/dashboard', [], [], 'api-gateway', true);
-        Log::info($call);
-        return view('content.dashboard', [
-            'customer' => $call['response'],
-            'total' => $call['response'] ?? 0,
-        ]);
+        {
+        return view('content.dashboard');
     }
 }
