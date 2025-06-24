@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cookie;
+
 class DashboardController extends Controller
 {
     /**
@@ -12,7 +14,10 @@ class DashboardController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-        {
-        return view('content.dashboard');
+    {
+        $me = json_decode(Cookie::get('me'));
+        return view('content.dashboard', [
+            'data' => $me,
+        ]);
     }
 }
