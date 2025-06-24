@@ -25,7 +25,7 @@ class AuthController extends Controller
                     'password' => $password,
                 ];
                 $login = lgk_request('postraw', 'auth/login', $data, [], 'api-gateway', true, false);
-                if ($login) {
+                if ($login['response']) {
                     $access_token = $login['response']['data']['access_token'];
                     $refresh_token = $login['response']['data']['access_token'];
                     $expired_time = ($login['response']['data']['expires_in'] / 60); //menit
