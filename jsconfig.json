@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/": ["resources/views/react/*"]
+        }
+    },
+    "include": ["resources/views/react"],
+    "exclude": ["node_modules", "public"]
+}

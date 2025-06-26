@@ -94,4 +94,7 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     Route::controller(DashboardController::class)->prefix('dashboard')->group(function () {
         Route::get('/', 'index')->name('dashboard');
     });
+    Route::controller(DashboardController::class)->prefix('hr-system')->group(function () {
+        Route::get('/user-management', 'index');
+    });
 });
