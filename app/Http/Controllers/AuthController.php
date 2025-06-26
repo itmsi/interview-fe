@@ -53,7 +53,8 @@ class AuthController extends Controller
 
                     $permission = json_encode($login['response']['data']['system_access']);
                     $me = $login['response']['data'];
-                    Cache::put('me', $me, $expires);
+                    // Cache::put('me', $me, $expires);
+                    Cache::put('me', $me);
                     $req->session()->put('permission', $permission);
                     session(['lifetime' => Config::get('session.lifetime')]);
                     

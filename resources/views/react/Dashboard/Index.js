@@ -5,24 +5,18 @@ import { Sidemenu } from './Component/Sidemenu';
 import { Header } from './Component/Header';
 import { Index as Home } from './Home/Index';
 import { Index as ManageUser } from './Manageuser/Index';
-import { slugify } from './Helper/Helper';
+import { ToastContainer } from 'react-toastify';
 
 const Index = (props) => {
-    const { access_token, profile, system_access } = props;
+    const { access_token, userInfo, system_access } = props;
     const [page, setPage] = useState('Dashboard');
-    console.log({
-        system_access: system_access,
-        profile: profile,
-        access_token: access_token,
-    });
-
     return (
         <Container fluid>
             <Row>
                 <Sidemenu systems={system_access || []} />
-                <Col lg="9">
-                    <Header profile={profile || []} page={page} />
-                    <div className='mt-4 w-100'>
+                <Col lg="10">
+                    <Header profile={userInfo || []} page={page} />
+                    <div className='mt-3 w-100'>
                         <Routes>
                             <Route 
                                 path="/dashboard" 
@@ -46,6 +40,19 @@ const Index = (props) => {
                     </div>
                 </Col>
             </Row>
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                limit={3}
+            />
         </Container>
     )
 }

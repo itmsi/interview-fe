@@ -51,7 +51,7 @@ export const Header = ({ profile, page }) => {
     }, [dropdownOpen]);
 
     return (
-        <div className='d-flex justify-content-between align-items-center pt-5 pb-2 w-100'>
+        <div className='d-flex justify-content-between align-items-center pt-3 pb-2 w-100'>
             <div className='greet'>
                 <p className='m-0 lh-sm'>
                     {page === 'Dashboard' ? <>

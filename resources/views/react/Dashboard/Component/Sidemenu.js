@@ -27,9 +27,9 @@ export const Sidemenu = ({ systems }) => {
         }
     };
     return (
-        <StyleSideMenu lg="3" className='p-3 pe-0 vh-100'>
+        <StyleSideMenu xs="2" className='p-3 pe-0 vh-100'>
             <div className='page-sidebar overflow-auto h-100'>
-                <div className="text-center pt-4">
+                <div className="text-center">
                     <img 
                         src={"/assets/img/motor-sights-international.png"} 
                         className="img-fluid" 
@@ -37,15 +37,15 @@ export const Sidemenu = ({ systems }) => {
                     />
                 </div>
                 <ul className="list-unstyled my-5">
-                    <li className={`mb-2${isActive('/dashboard') ? ' active' : ''}`}>
-                        <Link to={'/dashboard'}>
+                    <li className={`mb-2`}>
+                        <Link to={'/dashboard'} className={`${isActive('/dashboard') ? 'active' : ''}`}>
                             <RxDashboard className='me-2' />Dashboard 
                         </Link>
                     </li>
                     {systems.map((system, idx) => {
                         const isOpen = openIndex === idx || isMenuGroupActive(system);
                         return (
-                        <li key={system.system_name + idx} className="">
+                        <li key={system.system_name + idx} className={`${isOpen ? ' current' : ''}`}>
                             <div className="dropdown">
                                 <button
                                     className="btn btn-light w-100 text-start dropdown-toggle"
@@ -58,13 +58,13 @@ export const Sidemenu = ({ systems }) => {
                                     {getSystemIcon(system.system_name)}{system.system_name}
                                 </button>
                                 <ul
-                                    className={`dropdown-menu pb-0 w-100${openIndex === idx ? ' show' : ''}`}
+                                    className={`dropdown-menu pb-0 w-100${isOpen ? ' show' : ''}`}
                                     aria-labelledby={`dropdownMenuButton${idx}`}
                                     style={{ position: 'static', float: 'none' }}
                                 >
                                     {system.access_list.map((menu, i) => (
-                                        <li key={menu.menu_name + i}>
-                                            <Link to={`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`} className={`dropdown-item${isActive(`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`) ? ' active' : ''}`} href="#">
+                                        <li key={menu.menu_name + i} className={``}>
+                                            <Link to={`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`} className={`dropdown-item${isActive(`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`) ? ' current' : ''}`} href="#">
                                                 {menu.menu_name}
                                             </Link>
                                         </li>
@@ -86,38 +86,34 @@ const StyleSideMenu = styled(Col) `
         border-radius: 10px;
     }
     li {
-        padding:8px 10px;
-        position: relative;
         a, button {
             text-decoration: none;
             color:var(--color-text);
             font-family: var(--font-primary);
             display: inline-flex;
             align-items: center;
-            padding-left: 0;
-            padding-right: 0;
+            padding:8px 10px;
+            position: relative;
             font-size: 1rem;
-            svg {
-                margin-top: 2px;
-            }
-        }
-        &.active {
-            background-color:rgba(2, 83, 165, 0.08);
-            &::before {
-                content:'';
-                position: absolute;
-                left:0;
-                top:0;
-                bottom:0;
-                width: 2px;
-                background-color: var(--color-main);
-            }
-            a {
+            
+            &.active {
+                background-color:rgba(2, 83, 165, 0.08);
                 color:var(--color-main);
                 font-family: var(--font-main-bold);
+                    
+                &::before {
+                    content:'';
+                    position: absolute;
+                    left:0;
+                    top:0;
+                    bottom:0;
+                    width: 2px;
+                    background-color: var(--color-main);
+                }
             }
         }
         ul {
+            padding-left: 1.7rem;
             li {
                 padding-top:0px;
                 padding-bottom:0px;
@@ -138,5 +134,36 @@ const StyleSideMenu = styled(Col) `
         border:0;
         border-radius: 0 0 8px 8px;
         background-color: transparent;
+    }
+    .current {
+        .dropdown-toggle {
+            background-color:rgba(2, 83, 165, 0.08);
+            color:var(--color-main);
+            font-family: var(--font-main-bold);
+                
+            &::before {
+                content:'';
+                position: absolute;
+                left:0;
+                top:0;
+                bottom:0;
+                width: 2px;
+                background-color: var(--color-main);
+            }
+        }
+        .current {
+            position: relative;
+            color:var(--color-main);
+            font-family: var(--font-main-bold);
+            /* &::before {
+                content:'';
+                position: absolute;
+                left:0;
+                top:0;
+                bottom:0;
+                width: 2px;
+                background-color: var(--color-main);
+            } */
+        }
     }
 `
