@@ -15,9 +15,22 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $me = json_decode(Cookie::get('me'));
-        return view('content.dashboard', [
-            'data' => $me,
-        ]);
+        // Debug cookie information
+        $access_token = Cookie::get('access_token');
+        $refresh_token = Cookie::get('refresh_token');
+        $me = Cookie::get('me');
+        
+        $data = [
+            'access_token' => $access_token ? 'Set' : 'Not Set',
+            'refresh_token' => $refresh_token ? 'Set' : 'Not Set',
+            'me' => $me ? 'Set' : 'Not Set',
+            'me_data' => $me ? json_decode($me, true) : null,
+            'all_cookies' => request()->cookies->all(),
+            'session_data' => session()->all()
+        ];
+        
+        Log::info('Dashboard accessed', $data);
+        
+        return view('content.dashboard', compact('data'));
     }
 }

@@ -24,8 +24,14 @@ class AuthController extends Controller
                     'username' => $username,
                     'password' => $password,
                 ];
+                
+                Log::info('Login attempt', ['username' => $username]);
+                
                 $login = lgk_request('postraw', 'auth/login', $data, [], 'api-gateway', true, false);
-                if ($login['response']) {
+                
+                Log::info('Login response', ['login' => $login]);
+                
+                if ($login && isset($login['response']) && $login['response']) {
                     $access_token = $login['response']['data']['access_token'];
                     $refresh_token = $login['response']['data']['access_token'];
                     $expired_time = ($login['response']['data']['expires_in'] / 60); //menit
@@ -36,6 +42,12 @@ class AuthController extends Controller
                         $expires = $expired_time; // one hours
                     }
 
+                    Log::info('Setting cookies', [
+                        'access_token' => $access_token ? 'Set' : 'Not Set',
+                        'refresh_token' => $refresh_token ? 'Set' : 'Not Set',
+                        'expires' => $expires
+                    ]);
+
                     Cookie::queue(Cookie::make('access_token', $access_token, $expires));
                     Cookie::queue(Cookie::make('refresh_token', $refresh_token, ($expires * 2)));
 
@@ -44,17 +56,26 @@ class AuthController extends Controller
                     Cookie::queue(Cookie::make('me', json_encode($me), $expires));
                     $req->session()->put('permission', $permission);
                     session(['lifetime' => Config::get('session.lifetime')]);
+                    
+                    Log::info('Cookies set successfully');
+                    
+                    // Redirect to dashboard only on successful login
+                    return redirect()->route('dashboard');
                 } else {
-                    //return back();
+                    Log::warning('Login failed', ['login_response' => $login]);
+                    // Login failed - return to login page with error
                     return view('login', [
                         'username' => $username ?? '',
+                        'error' => 'Invalid username or password'
                     ]);
                 }
-            } catch (\Exception$e) {
-                return _403($e->getMessage());
+            } catch (\Exception $e) {
+                Log::error('Login error: ' . $e->getMessage());
+                return view('login', [
+                    'username' => $username ?? '',
+                    'error' => 'Login failed. Please try again.'
+                ]);
             }
-
-            return redirect()->route('dashboard');
         }
 
         if (Cookie::get('access_token')) {
