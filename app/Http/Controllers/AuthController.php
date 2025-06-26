@@ -53,7 +53,7 @@ class AuthController extends Controller
 
                     $permission = json_encode($login['response']['data']['system_access']);
                     $me = $login['response']['data'];
-                    Cookie::queue(Cookie::make('me', json_encode($me), $expires));
+                    Cache::put('me', $me, $expires);
                     $req->session()->put('permission', $permission);
                     session(['lifetime' => Config::get('session.lifetime')]);
                     
@@ -87,9 +87,10 @@ class AuthController extends Controller
 
     public function logout(Request $req)
     {
-        $me = json_decode(Cookie::get('me'));
+        $me = (Cache::get('me'));
         if ($me) {
-            Cache::forget('sidebar'.$me->userInfo->user->id); //remove cache sidebar
+            Cache::forget('me');
+            //Cache::forget('sidebar'.$me->userInfo->user->id); //remove cache sidebar
         }
 
         // revoke token first

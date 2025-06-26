@@ -156,7 +156,7 @@ if (! function_exists('format_currency')) {
 if (! function_exists('can')) {
     function can($value)
     {
-        $me = json_decode(\Cookie::get('me'));
+        $me = json_decode(Cookie::get('me'));
         if ($me) {
             if ($me->role_name == 'Administrator') {
                 return true;
