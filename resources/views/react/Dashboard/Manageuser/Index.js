@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { apiGet, apiPost, SortableHeader } from '../Helper/Helper';
+import { apiDelete, apiGet, apiPost, apiPut, SortableHeader } from '../Helper/Helper';
 import { FaRegPenToSquare, FaRegTrashCan } from "react-icons/fa6";
 import { Button, Container, FloatingLabel, Form, Offcanvas, Row } from 'react-bootstrap';
 import { FiPlusCircle } from "react-icons/fi";
 import { Popup } from '../Component/Popup';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
+import { LoadingAnimation } from '../Component/Loading';
 
 export const Index = ({ token, setPage }) => {
 
@@ -105,48 +106,6 @@ export const Index = ({ token, setPage }) => {
         }));
     };
 
-    const handleFormSubmit = async(e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        if (
-            formData.employee_id &&
-            formData.role_ids.length > 0 &&
-            formData.email &&
-            /\S+@\S+\.\S+/.test(formData.email) &&
-            formData.password.length >= 6
-        ) {
-            setValidated(false);
-            const dataToSend = { ...formData, is_active: true };
-            
-            try {
-                const response = await apiPost('/users', token, dataToSend);
-                setShowAddUser(false);
-                apiGet('/users', token)
-                    .then(data => setUsers(data?.data?.data || []));
-                
-                setFormData({
-                    username: '',
-                    employee_id: '',
-                    full_name: '',
-                    email: '',
-                    password: '',
-                    is_active: false,
-                    role_ids: []
-                });
-
-            } catch (error) {
-                toast.error(error.message, {
-                    position: "top-right",
-                    autoClose: 3000
-                });
-                console.error('Gagal menambah user:', error);
-            }
-        } else {
-            setValidated(true);
-        }
-    };
     useEffect(() => {
         if (showAddUser) {
             if (employeeOptions.length === 0) {
@@ -176,6 +135,126 @@ export const Index = ({ token, setPage }) => {
         }
     }, [showAddUser, token]);
 
+    // FUNCTION DELETE USERS LIST
+    const [showDeletePopup, setShowDeletePopup] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
+
+    const handleDeleteUser = (userId) => {
+        setUserToDelete(userId);
+        setShowDeletePopup(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!userToDelete) return;
+        try {
+            await apiDelete('/users', token, { params: { id: userToDelete } });
+            toast.success('User berhasil dihapus!', {
+                position: "top-right",
+                autoClose: 3000
+            });
+            setShowDeletePopup(false);
+            setUserToDelete(null);
+            // Refresh data user
+            apiGet('/users', token)
+                .then(data => setUsers(data?.data?.data || []));
+        } catch (error) {
+            toast.error('Gagal menghapus user: ' + error.message, {
+                position: "top-right",
+                autoClose: 3000
+            });
+            setShowDeletePopup(false);
+            setUserToDelete(null);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeletePopup(false);
+        setUserToDelete(null);
+    };
+
+    // FUNCTION EDIT USERS
+    const [isEdit, setIsEdit] = useState(false);
+    const [editUserId, setEditUserId] = useState(null);
+    const handleEditUser = (userId) => {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+
+        setFormData({
+            username: user.username || '',
+            employee_id: user.employee_id || '',
+            full_name: user.employee?.name || '',
+            email: user.email || '',
+            password: '', // kosongkan password saat edit
+            is_active: user.is_active ?? false,
+            role_ids: user.roles ? user.roles.map(r => r.id) : []
+        });
+        setIsEdit(true);
+        setEditUserId(userId);
+        setTitleModals('Edit User');
+        setTitleButton('Update User');
+        setShowAddUser(true);
+    };
+
+    const handleFormSubmit = async(e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (
+            formData.employee_id &&
+            formData.role_ids.length > 0 &&
+            formData.email &&
+            /\S+@\S+\.\S+/.test(formData.email) &&
+            (isEdit || formData.password.length >= 6) // password boleh kosong saat edit
+        ) {
+            setValidated(false);
+            const dataToSend = { ...formData, is_active: true };
+
+            try {
+                if (isEdit && editUserId) {
+                    console.log({
+                        dataToSend
+                    });
+                    
+                    // Edit user
+                    await apiPut('/users', token, dataToSend, { params: { id: editUserId } });
+                    toast.success('User berhasil diupdate!', {
+                        position: "top-right",
+                        autoClose: 3000
+                    });
+                } else {
+                    // Add user
+                    await apiPost('/users', token, dataToSend);
+                    toast.success('User berhasil ditambahkan!', {
+                        position: "top-right",
+                        autoClose: 3000
+                    });
+                }
+                setShowAddUser(false);
+                setIsEdit(false);
+                setEditUserId(null);
+                apiGet('/users', token)
+                    .then(data => setUsers(data?.data?.data || []));
+                setFormData({
+                    username: '',
+                    employee_id: '',
+                    full_name: '',
+                    email: '',
+                    password: '',
+                    is_active: false,
+                    role_ids: []
+                });
+            } catch (error) {
+                toast.error(error.message, {
+                    position: "top-right",
+                    autoClose: 3000
+                });
+                console.error('Gagal menyimpan user:', error);
+            }
+        } else {
+            setValidated(true);
+        }
+    };
     return (
         <React.Fragment>
             {loading ? (
@@ -221,8 +300,18 @@ export const Index = ({ token, setPage }) => {
                                 <td>{user?.employee?.alias || 'n/a'}</td>
                                 <td><div className={`p-1 status-table ${user?.employee?.status === 'active' ? 'text-bg-success' : 'text-bg-danger'} rounded-3`}>{user?.employee?.status || '-'}</div></td>
                                 <td>
-                                    <button className="btn btn-sm btn-transparent me-2"><FaRegPenToSquare /></button>
-                                    <button className="btn btn-sm btn-transparent "><FaRegTrashCan /></button>
+                                    <button 
+                                        onClick={() => handleEditUser(user.id)}
+                                        className="btn btn-sm btn-transparent me-2"
+                                    >
+                                        <FaRegPenToSquare />
+                                    </button>
+                                    <button 
+                                        className="btn btn-sm btn-transparent"
+                                        onClick={() => handleDeleteUser(user.id)}
+                                    >
+                                        <FaRegTrashCan />
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -234,6 +323,7 @@ export const Index = ({ token, setPage }) => {
                     </tbody>
                 </table>
             </>)}
+            {/* MODALS ADD NEW USERS */}
             <Popup
                 show={showAddUser}
                 title={titleModals}
@@ -257,6 +347,30 @@ export const Index = ({ token, setPage }) => {
                     handleRoleChange={handleRoleChange}
                 />
             </Popup>
+
+            {/* MODALS REMOVE USERS LIST */}
+            <Popup
+                show={showDeletePopup}
+                title="Konfirmasi Hapus User"
+                size="md"
+                onHide={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                titleConfirm="Hapus"
+            >
+                <div>Apakah Anda yakin ingin menghapus user ini?</div>
+            </Popup>
+
+            {/* MODALS EDIT USERS LIST */}
+            {/* <Popup
+                show={showDeletePopup}
+                title="Konfirmasi Hapus User"
+                size="md"
+                onHide={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                titleConfirm="Hapus"
+            >
+                <div>Apakah Anda yakin ingin menghapus user ini?</div>
+            </Popup> */}
         </React.Fragment>
     )
 }

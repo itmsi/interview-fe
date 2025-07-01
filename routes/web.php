@@ -96,5 +96,10 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     });
     Route::controller(DashboardController::class)->prefix('hr-system')->group(function () {
         Route::get('/user-management', 'index');
+        Route::get('/employee-management', 'index');
+    });
+    Route::controller(DashboardController::class)->prefix('interview')->group(function () {
+        Route::get('/interview', 'index');
+        Route::get('/candidate', 'index');
     });
 });

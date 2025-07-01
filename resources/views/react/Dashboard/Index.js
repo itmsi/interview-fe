@@ -6,6 +6,9 @@ import { Header } from './Component/Header';
 import { Index as Home } from './Home/Index';
 import { Index as ManageUser } from './Manageuser/Index';
 import { ToastContainer } from 'react-toastify';
+import { motion } from 'framer-motion';
+import { Candidate } from './Interview/Candidate';
+import { ListInterview } from './Interview/ListInterview';
 
 const Index = (props) => {
     const { access_token, userInfo, system_access } = props;
@@ -16,7 +19,12 @@ const Index = (props) => {
                 <Sidemenu systems={system_access || []} />
                 <Col lg="10">
                     <Header profile={userInfo || []} page={page} />
-                    <div className='mt-3 w-100'>
+                    <motion.div 
+                        className='mt-3 w-100'
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: .6, delay: 0.3, ease:0.3 }}
+                    >
                         <Routes>
                             <Route 
                                 path="/dashboard" 
@@ -36,8 +44,26 @@ const Index = (props) => {
                                     />
                                 } 
                             />
+                            <Route 
+                                path={`/interview/candidate`}
+                                element={
+                                    <Candidate
+                                        token={access_token}
+                                        setPage={setPage} 
+                                    />
+                                } 
+                            />
+                            <Route 
+                                path={`/interview/interview`}
+                                element={
+                                    <ListInterview
+                                        token={access_token}
+                                        setPage={setPage} 
+                                    />
+                                } 
+                            />
                         </Routes>
-                    </div>
+                    </motion.div>
                 </Col>
             </Row>
             <ToastContainer

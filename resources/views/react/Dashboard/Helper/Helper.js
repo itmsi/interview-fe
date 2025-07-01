@@ -46,8 +46,13 @@ export const apiPost = async(endpoint, token, body) => {
     return response.json();
 }
 
-export const apiPut = async(endpoint, token, body) => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+export const apiPut = async(endpoint, token, body = {}, options = {}) => {
+    let url = `${BASE_URL}${endpoint}`;
+    if (options.params && typeof options.params === 'object') {
+        const query = new URLSearchParams(options.params).toString();
+        url += `?${query}`;
+    }
+    const response = await fetch(url, {
         method: 'PUT',
         headers: getHeaders(token, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
@@ -56,8 +61,13 @@ export const apiPut = async(endpoint, token, body) => {
     return response.json();
 }
 
-export const apiDelete = async(endpoint, token) => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+export const apiDelete = async(endpoint, token, options = {}) => {
+    let url = `${BASE_URL}${endpoint}`;
+    if (options.params && typeof options.params === 'object') {
+        const query = new URLSearchParams(options.params).toString();
+        url += `?${query}`;
+    }
+    const response = await fetch(url, {
         method: 'DELETE',
         headers: getHeaders(token),
     });
