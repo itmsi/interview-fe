@@ -1,6 +1,21 @@
 import { FaSortUp, FaSortDown } from 'react-icons/fa';
 
+const placeholderProfileImage = '/assets/img/avatar.png';
+export const onImageProfileError = (e) => {
+    e.target.src = placeholderProfileImage
+}
 
+export const ImageProfileSrc = ({ src, alt, className = "", width="auto" }) => {
+    return (
+        <img
+            src={src}
+            alt={alt}
+            width={width}
+            className={className}
+            onError={onImageProfileError}
+        />
+    );
+}
 export const isActive = (path) => location.pathname.startsWith(path);
 export const slugify = (text) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 export const isMenuGroupActive = (system) => {
