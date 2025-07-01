@@ -25,16 +25,12 @@ class AuthController extends Controller
                     'password' => $password,
                 ];
                 
-                Log::info('Login attempt', ['username' => $username]);
-                
-                $login = lgk_request('postraw', 'auth/login', $data, [], 'api-gateway', true, false);
-                
-                Log::info('Login response', ['login' => $login]);
+                $login = lgk_request('postraw', 'auth/signin', $data, [], 'api-gateway', true, false);
                 
                 if ($login && isset($login['response']) && $login['response']) {
-                    $access_token = $login['response']['data']['access_token'];
-                    $refresh_token = $login['response']['data']['access_token'];
-                    $expired_time = ($login['response']['data']['expires_in'] / 60); //menit
+                    $access_token = $login['response']['bearer_token'];
+                    $refresh_token = $login['response']['bearer_token'];
+                    $expired_time = ($login['response']['exp'] / 60); //menit
 
                     if ($req->has('remember')) {
                         $expires = 1440; // 24 jam
@@ -42,17 +38,13 @@ class AuthController extends Controller
                         $expires = $expired_time; // one hours
                     }
 
-                    Log::info('Setting cookies', [
-                        'access_token' => $access_token ? 'Set' : 'Not Set',
-                        'refresh_token' => $refresh_token ? 'Set' : 'Not Set',
-                        'expires' => $expires
-                    ]);
-
                     Cookie::queue(Cookie::make('access_token', $access_token, $expires));
                     Cookie::queue(Cookie::make('refresh_token', $refresh_token, ($expires * 2)));
 
-                    $permission = json_encode($login['response']['data']['system_access']);
-                    $me = $login['response']['data'];
+                    $headers = ['Authorization' => 'Bearer '.$access_token];
+                    $callme = lgk_request('get', 'auth/me', [], $headers, 'api-gateway', true, false);
+                    $me = $callme['response']['data'];
+                    $permission = json_encode($me['system_access']);
                     // Cache::put('me', $me, $expires);
                     Cache::put('me', $me);
                     $req->session()->put('permission', $permission);
