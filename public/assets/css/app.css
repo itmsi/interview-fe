@@ -11997,6 +11997,15 @@ body {
 .font-secondary {
     font-family: var(--font-secondary);
 }
+.color-label {
+    color:#6b7280;
+}
+.color-text {
+    color: var(--color-text)
+}
+.color-primary {
+    color: var(--color-primary)
+}
 .loader-wrapper {
     height: 100%;
     width: 100%;
@@ -12110,6 +12119,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.btn {
+    letter-spacing: .03rem;
 }
 .btn-action {
     background-color: rgb(2 83 165 / 90%);
