@@ -9,7 +9,7 @@
     <link rel="shortcut icon" href="{{ asset('/favicon.ico') }}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('/apple-touch-icon.png') }}" />
     
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+     <link rel="stylesheet" href="{{ asset('assets/app/css/app.css') }}">
 </head>
 
 <body class="auth-body">
@@ -92,7 +92,6 @@
     </div>
     
     <!-- jQuery -->
-    <script src="{{ asset('assets/js/app.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var loader = document.querySelector('.loader-wrapper');

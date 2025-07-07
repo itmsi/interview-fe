@@ -16,7 +16,7 @@ const Index = (props) => {
     return (
         <Container fluid>
             <Row>
-                <Sidemenu systems={system_access || []} />
+                <Sidemenu systems={system_access || []} profile={userInfo || []} />
                 <Col lg="10">
                     <Header profile={userInfo || []} page={page} />
                     <motion.div 
@@ -32,6 +32,7 @@ const Index = (props) => {
                                     <Home
                                         token={access_token}
                                         setPage={setPage} 
+                                        userInfo={userInfo}
                                     />
                                 } 
                             />
@@ -41,6 +42,7 @@ const Index = (props) => {
                                     <ManageUser
                                         token={access_token}
                                         setPage={setPage} 
+                                        userInfo={userInfo}
                                     />
                                 } 
                             />
@@ -48,8 +50,10 @@ const Index = (props) => {
                                 path={`/interview/candidate`}
                                 element={
                                     <Candidate
+                                        systems={system_access || []}
                                         token={access_token}
                                         setPage={setPage} 
+                                        userInfo={userInfo}
                                     />
                                 } 
                             />
@@ -57,8 +61,10 @@ const Index = (props) => {
                                 path={`/interview/interview`}
                                 element={
                                     <ListInterview
+                                        systems={system_access || []}
                                         token={access_token}
                                         setPage={setPage} 
+                                        userInfo={userInfo}
                                     />
                                 } 
                             />

@@ -1,23 +1,52 @@
 const path = require('path');
-const webpack = require('webpack');
-const dotenv = require('dotenv');
+const { merge } = require('webpack-merge');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-// Load .env file
-const env = dotenv.config().parsed || {};
+//# =======================================
 
-// Convert ke bentuk DefinePlugin
-const envKeys = Object.keys(env).reduce((acc, key) => {
-    acc[`process.env.${key}`] = JSON.stringify(env[key]);
-    return acc;
-}, {});
+const mix = require('laravel-mix');
+require('laravel-mix-clean');
 
-module.exports = {
-    resolve: {
-        alias: {
-            '@': path.resolve(__dirname, 'resources/views/react'),
-        },
+mix.setPublicPath('public');
+
+mix.clean({
+    cleanOnceBeforeBuildPatterns: ['public/assets/app'],
+});
+
+mix.disableNotifications();
+
+mix.options({
+    processCssUrls: false,
+    manifest: false
+});
+
+mix.webpackConfig({
+    module: {
+        rules: [
+            {
+                test: /\.(js)$/,
+                use: 'cache-loader',
+                include: path.resolve('resources/views/react'),
+            },
+        ],
     },
-    plugins: [
-        new webpack.DefinePlugin(envKeys)
-    ]
-};
+    optimization: {
+        usedExports: true,
+        sideEffects: true,
+        providedExports: true
+    },
+    output: {
+        chunkFilename: 'assets/app/js/modules/[name].[contenthash].js',
+        publicPath: '/',
+    }
+});
+
+mix.postCss('resources/views/react/css/app.css', 'public/assets/app/css');
+
+if (mix.inProduction()) {
+    mix.js('resources/views/react/app.js', 'public/assets/app/js').react();
+    mix.version();
+} else {
+    mix.js('resources/views/react/app.js', 'public/assets/app/js').react().sourceMaps();
+}

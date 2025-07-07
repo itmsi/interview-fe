@@ -3,6 +3,15 @@ body {
     font-size: 14px;
     color: var(--color-text);
 }
+::-webkit-scrollbar {
+    background-color: #fff;
+    width: 0.3rem;
+    height: 0.3rem;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+}
 .font-primary {
     font-family: var(--font-main);
 }
@@ -211,7 +220,7 @@ body {
     font-size: 12px;
 }
 .modal-title {
-    font-family: var(--font-main-bold);
+    font-family: var(--font-main);
     color: var(--color-text);
     font-size: 1.3rem;
 }
@@ -252,4 +261,53 @@ body {
     background-position: left top, right top, left bottom, left top;
     background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
     background-size: 100% 1px, 1px 100%, 100% 1px, 1px 100%;
+}
+.tab-question {
+    --bs-body-bg: #f5f5f5;
+}
+.tab-question .nav-link {
+    min-width: 200px;
+    max-width: 50%;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    color:var(--color-text);
+}
+.tab-question.nav-tabs .nav-link.active, 
+.tab-question.nav-tabs .nav-item.show .nav-link {
+    background: #f5f5f5;
+}
+.avatar {
+    line-height: 2.813rem;
+    font-size: 1rem;
+    position: relative;
+    height: 2.625rem;
+    width: 2.625rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-weight: 500;
+}
+.create-center {
+    margin: 15px;
+    border-radius: 10px;
+}
+.create-center.h-statik {
+    height: 300px;
+}
+.badge {
+    font-family: var(--font-secondary);
+    font-weight: normal;
+    border-radius: 2px;
+}
+@media (max-width: 1024px) {
+    .action-create-candidate {
+        position:absolute;
+        top: -3.5rem;
+        right:0;
+    }
+    .action-create-candidate button {
+        letter-spacing: 0;
+        font-family: var(--font-main);
+    }
 }

@@ -1,3 +1,4 @@
+import { useWindowSize } from '../Helper/Helper';
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from 'react-bootstrap';
 import { IoIosArrowDown, IoMdPerson, IoIosLogOut } from "react-icons/io";
@@ -6,6 +7,7 @@ import styled from 'styled-components';
 
 export const Header = ({ profile, page }) => {
     const { employee, roles, user } = profile;
+    const { isMobile } = useWindowSize();
 
     const now = new Date();
     const hour = now.getHours();
@@ -64,6 +66,7 @@ export const Header = ({ profile, page }) => {
                     }
                 </p>
             </div>
+            {!isMobile && (
             <StyleDropdown className='action-profile' ref={dropdownRef}>
                 <Button
                     className='thumb-profile'
@@ -89,6 +92,7 @@ export const Header = ({ profile, page }) => {
                 </div>
                 }
             </StyleDropdown>
+            )}
         </div>
     )
 }

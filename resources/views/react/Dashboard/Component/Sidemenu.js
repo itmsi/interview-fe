@@ -1,17 +1,26 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Col } from 'react-bootstrap'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom';
 import { RxDashboard } from "react-icons/rx";
 import { AiOutlineAppstore } from 'react-icons/ai';
-import { FaWarehouse, FaMoneyBillWave, FaAddressBook, FaUserFriends } from 'react-icons/fa';
-import { isActive, isMenuGroupActive, slugify, } from '../Helper/Helper';
+import { FaWarehouse, FaMoneyBillWave, FaAddressBook } from 'react-icons/fa';
+import { IoIosLogOut } from "react-icons/io";
+import { RxHamburgerMenu, RxCross2 } from 'react-icons/rx';
+import { isActive, isMenuGroupActive, slugify, useWindowSize } from '../Helper/Helper';
 
-export const Sidemenu = ({ systems }) => {
+export const Sidemenu = ({ systems, profile }) => {
+    const { employee } = profile;
     const [openIndex, setOpenIndex] = useState(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { isMobile } = useWindowSize();
 
     const handleToggle = (idx) => {
         setOpenIndex(openIndex === idx ? null : idx);
+    };
+
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
     };
 
     const getSystemIcon = (name) => {
@@ -27,59 +36,136 @@ export const Sidemenu = ({ systems }) => {
         }
     };
     return (
-        <StyleSideMenu xs="2" className='p-3 pe-0 vh-100'>
-            <div className='page-sidebar overflow-auto h-100'>
-                <div className="text-center">
-                    <img 
-                        src={"/assets/img/motor-sights-international.png"} 
-                        className="img-fluid" 
-                        alt=""
-                    />
-                </div>
-                <ul className="list-unstyled my-5">
-                    <li className={`mb-2`}>
-                        <Link to={'/dashboard'} className={`${isActive('/dashboard') ? 'active' : ''}`}>
-                            <RxDashboard className='me-2' />Dashboard 
-                        </Link>
-                    </li>
-                    {systems.map((system, idx) => {
-                        const isOpen = openIndex === idx || isMenuGroupActive(system);
-                        return (
-                        <li key={system.system_name + idx} className={`${isOpen ? ' current' : ''}`}>
-                            <div className="dropdown">
-                                <button
-                                    className="btn btn-light w-100 text-start dropdown-toggle"
-                                    type="button"
-                                    id={`dropdownMenuButton${idx}`}
-                                    data-bs-toggle="dropdown"
-                                    onClick={() => handleToggle(idx)}
-                                    aria-expanded={isOpen}
-                                >
-                                    {getSystemIcon(system.system_name)}{system.system_name}
-                                </button>
-                                <ul
-                                    className={`dropdown-menu pb-0 w-100${isOpen ? ' show' : ''}`}
-                                    aria-labelledby={`dropdownMenuButton${idx}`}
-                                    style={{ position: 'static', float: 'none' }}
-                                >
-                                    {system.access_list.map((menu, i) => (
-                                        <li key={menu.menu_name + i} className={``}>
-                                            <Link to={`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`} className={`dropdown-item${isActive(`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`) ? ' current' : ''}`} href="#">
-                                                {menu.menu_name}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
+        <>
+            {isMobile && (
+                <HeaderMobile className={`d-flex justify-content-between align-items-center px-3 py-2 ${isMenuOpen ? 'active' : ''}`} >
+                    <button onClick={toggleMenu}>
+                        {isMenuOpen ? <RxCross2 size={24} /> : <RxHamburgerMenu size={24} />}
+                    </button>
+                    <div className="text-center">
+                        <img 
+                            src={"/assets/img/motor-sights-international.png"} 
+                            width={200}
+                            alt=""
+                        />
+                    </div>
+                </HeaderMobile>
+            )}
+            <StyleSideMenu 
+                xs="2" 
+                className={`p-3 pe-0 vh-100${isMobile ? ' mobile-menu ' : ''}${isMenuOpen ? ' open' : ''}`}
+            >
+                <div className='page-sidebar overflow-auto h-100' >
+                    {isMobile ?
+                    <div className='action-profile text-center mt-4'>
+                        <img src={'/assets/img/avatar5.png'} width={80} className='rounded-circle' />
+                        <div className='profile-dropdown mx-2'>
+                            <h5 className='m-0 h6'>{employee?.name || ''}</h5>
+                            <small>{employee?.title?.name || ''}</small>
+                        </div>
+                    </div>
+                    :
+                    <div className="text-center">
+                        <img 
+                            src={"/assets/img/motor-sights-international.png"} 
+                            className="img-fluid" 
+                            alt=""
+                        />
+                    </div>
+                    }
+                    <ul className="list-unstyled my-5">
+                        <li className={`mb-2`}>
+                            <Link to={'/dashboard'} className={`${isActive('/dashboard') ? 'active' : ''}`}>
+                                <RxDashboard className='me-2' />Dashboard 
+                            </Link>
                         </li>
-                    )})}
-                </ul>
-            </div>
-        </StyleSideMenu>
+                        {systems.map((system, idx) => {
+                            const isOpen = openIndex === idx || isMenuGroupActive(system);
+                            return (
+                            <li key={system.system_name + idx} className={`${isOpen ? ' current' : ''}`}>
+                                <div className="dropdown">
+                                    <button
+                                        className="btn btn-light w-100 text-start dropdown-toggle"
+                                        type="button"
+                                        id={`dropdownMenuButton${idx}`}
+                                        // data-bs-toggle="dropdown"
+                                        onClick={() => handleToggle(idx)}
+                                        aria-expanded={isOpen}
+                                    >
+                                        {getSystemIcon(system.system_name)}{system.system_name}
+                                    </button>
+                                    <ul
+                                        className={`dropdown-menu pb-0 w-100${isOpen ? ' show' : ''}`}
+                                        aria-labelledby={`dropdownMenuButton${idx}`}
+                                        style={{ position: 'static', float: 'none' }}
+                                    >
+                                        {system.access_list.map((menu, i) => (
+                                            <li key={menu.menu_name + i} className={``}>
+                                                <Link 
+                                                    to={`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`} 
+                                                    className={`dropdown-item${isActive(`/${slugify(system.system_name)}/${slugify(menu.menu_name)}`) ? ' current' : ''}`} 
+                                                    href="#"
+                                                    onClick={() => isMobile && setIsMenuOpen(false)}
+                                                >
+                                                    {menu.menu_name}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </li>
+                        )})}
+                        {isMobile && (
+                            <li>
+                                <Link className='text-danger' reloadDocument to={'/logout'}><IoIosLogOut className='me-2' />Logout</Link>
+                            </li>
+                        )}
+                    </ul>
+                </div>
+            </StyleSideMenu>
+            {isMobile && isMenuOpen && <Overlay onClick={toggleMenu} />}
+        </>
     )
 }
 
-const StyleSideMenu = styled(Col) `
+const HeaderMobile = styled.div`
+    position: sticky;
+    top: 0;
+    z-index: 1050;
+    transition: all 0.3s ease;
+    background-color:#fff;
+    box-shadow: 15px -8px 15px #000;
+    &.active {
+        transform: translateX(16rem);
+    }
+    button { 
+        background: var(--color-main, #0253A5);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        padding: 5px 9px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+`;
+
+const Overlay = styled.div`
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+`;
+
+const StyleSideMenu = styled(Col)`
+    position: sticky;
+    left: 0;
+    top:0;
     .page-sidebar {
         padding: 1rem;
         background-color: #FAFAFA;
@@ -155,15 +241,28 @@ const StyleSideMenu = styled(Col) `
             position: relative;
             color:var(--color-main);
             font-family: var(--font-main-bold);
-            /* &::before {
-                content:'';
-                position: absolute;
-                left:0;
-                top:0;
-                bottom:0;
-                width: 2px;
-                background-color: var(--color-main);
-            } */
         }
+    }
+    
+    /* Mobile menu styles */
+    &.mobile-menu {
+        position: fixed;
+        top: 0;
+        width: 20em !important;
+        max-width: 20em;
+        left: -20em;
+        transition: left 0.3s ease-in-out;
+        z-index: 1030;
+        background-color: white;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        margin: 0;
+        
+        &.open {
+            left: 0;
+        }
+    }
+    
+    @media (max-width: 1024px) {
+        display: block;
     }
 `

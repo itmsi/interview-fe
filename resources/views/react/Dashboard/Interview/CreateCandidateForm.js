@@ -2,21 +2,26 @@ import React, { useState } from 'react';
 import { Form, Button, Row, Col, FloatingLabel } from 'react-bootstrap';
 import { GrAttachment } from "react-icons/gr";
 import DatePicker from "react-datepicker";
+import { addDays } from 'date-fns';
 import "react-datepicker/dist/react-datepicker.css";
+import styled from 'styled-components';
 
 export const CreateCandidateForm = ({ onSave, onCancel }) => {
     const [validated, setValidated] = useState(false);
+
+    const [fileNamePhoto, setFileNamePhoto] = useState('');
+    const [fileNameCV, setFileNameCV] = useState('');
     const [form, setForm] = useState({
         name: '',
         email: '',
         phone: '',
-        date_applied: '',
         position: '',
-        interviewer: [],
+        company: '',
         nationality: '',
         gender: '',
         religion: '',
         date_of_birth: '',
+        age: '',
         marital_status: '',
         address: '',
         city: '',
@@ -50,6 +55,9 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 alert("Image size must be under 1MB");
                 return;
             }
+            if (file) {
+                setFileNamePhoto(file.name);
+            }
         }
 
         if (name === "resume") {
@@ -60,6 +68,9 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
             if (file.size > MAX_PDF_SIZE) {
                 alert("Resume size must be under 2MB");
                 return;
+            }
+            if (file) {
+                setFileNameCV(file.name);
             }
         }
 
@@ -91,169 +102,262 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
     };
 
     return (
-        <Form noValidate validated={validated} onSubmit={handleSubmit} className="p-3 border bg-light rounded">
+        <StyleForm noValidate validated={validated} onSubmit={handleSubmit} className="p-3 border bg-light rounded">
             <h5 className="mb-4">Create New Candidate</h5>
             <Row className="g-3">
 
                 <Col md={6}>
-                    <FloatingLabel label="Name">
-                        <Form.Control name="name" required value={form.name} onChange={handleChange} />
+                    <FloatingLabel controlId="inputName" label="Name">
+                        <Form.Control 
+                            name="name"
+                            type="text" 
+                            placeholder="Enter your full name"
+                            value={form.name}
+                            onChange={handleChange} 
+                            required
+                        />
                         <Form.Control.Feedback type="invalid">Name is required.</Form.Control.Feedback>
                     </FloatingLabel>
                 </Col>
 
                 <Col md={6}>
-                    <FloatingLabel label="Email">
-                        <Form.Control name="email" type="email" required value={form.email} onChange={handleChange} />
+                    <FloatingLabel controlId="inputEmail" label="Email">
+                        <Form.Control 
+                            name="email"
+                            type="email"
+                            placeholder="" 
+                            value={form.email}
+                            onChange={handleChange}
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                            required
+                        />
                         <Form.Control.Feedback type="invalid">Valid email is required.</Form.Control.Feedback>
                     </FloatingLabel>
                 </Col>
 
                 <Col md={6}>
-                    <FloatingLabel label="Phone">
-                        <Form.Control name="phone" value={form.phone} onChange={handleChange} />
+                    <FloatingLabel label="Phone Number">
+                        <Form.Control 
+                            name="phone" 
+                            value={form.phone}
+                            placeholder="Enter your phone number"
+                            pattern="^08[0-9]{8,11}$"
+                            onChange={(e) => {
+                                const value = e.target.value.replace(/[^\d]/g, '');
+                                setForm(prev => ({
+                                    ...prev,
+                                    phone: value
+                                }));
+                            }}
+                            maxLength={13}
+                            onKeyPress={(e) => {
+                                if (!/[0-9]/.test(e.key)) {
+                                    e.preventDefault();
+                                }
+                            }}
+                            required
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            Please enter a valid phone number starting with 08
+                        </Form.Control.Feedback>
                     </FloatingLabel>
                 </Col>
 
-                <Col md={6} className='d-flex justify-content-between align-items-center'>
-                    <div className=''>Upload Photo</div>
-                    <Form.Group controlId="imageUpload" className='upload-files'>
-                        <Form.Label className='mb-0'>Photo <small className="d-block text-center text-muted">(max 1MB)</small></Form.Label>
-                        <Form.Control type="file" accept="image/*" name="image" onChange={handleFileChange} required hidden/>
-                        <Form.Control.Feedback type="invalid">Image is required.</Form.Control.Feedback>
-                    </Form.Group>
-                </Col>
-
                 <Col md={6}>
-                    <Form.Group controlId="date_applied">
-                        <Form.Label>Date Applied</Form.Label>
-                        <Form.Control
-                            type="datetime-local"
-                            name="date_applied"
-                            required
-                            value={form.date_applied}
-                            onChange={handleChange}
+                    <FloatingLabel label="Religion">
+                        <Form.Control 
+                            name="religion" 
+                            value={form.religion} 
+                            onChange={handleChange} 
+                            placeholder="Enter your religion"
                         />
-                        <Form.Control.Feedback type="invalid">Date applied is required.</Form.Control.Feedback>
-                    </Form.Group>
+                    </FloatingLabel>
+                </Col>
+                
+                <Col md={6}>
+                    <FloatingLabel label="Company">
+                        <Form.Control 
+                            name="company" 
+                            value={form.company}
+                            onChange={handleChange}
+                            placeholder="Enter your company name"
+                            required
+                        />
+                        <Form.Control.Feedback type="invalid">Company is required.</Form.Control.Feedback>
+                    </FloatingLabel>
                 </Col>
 
                 <Col md={6}>
                     <FloatingLabel label="Position">
-                        <Form.Control name="position" required value={form.position} onChange={handleChange} />
+                        <Form.Control 
+                            name="position" 
+                            value={form.position}
+                            onChange={handleChange}
+                            placeholder="Enter your phone number"
+                            required
+                        />
                         <Form.Control.Feedback type="invalid">Position is required.</Form.Control.Feedback>
-                    </FloatingLabel>
-                </Col>
-
-                <Col md={6}>
-                    <Form.Label>Interviewer</Form.Label>
-                    <div className="d-flex flex-wrap gap-3">
-                        {['HR', 'GM', 'VP', 'BOD'].map((role) => (
-                            <Form.Check
-                            key={role}
-                            type="checkbox"
-                            id={`interviewer-${role}`}
-                            label={role}
-                            value={role}
-                            checked={form.interviewer.includes(role)}
-                            onChange={(e) => {
-                                const selected = form.interviewer.includes(role)
-                                ? form.interviewer.filter(r => r !== role)
-                                : [...form.interviewer, role];
-                                setForm({ ...form, interviewer: selected });
-                            }}
-                            />
-                        ))}
-                    </div>
-                </Col>
-
-                <Col md={6} className='d-flex justify-content-between align-items-center'>
-                    <div className=''>Attach resume</div>
-                    <Form.Group controlId="resumeUpload" className='upload-files'>
-                        <Form.Label className='mb-0'><GrAttachment /> Attach Resume/CV (PDF)<small className="d-block text-center text-muted">(max 2MB, PDF only)</small></Form.Label>
-                        <Form.Control type="file" name="resume" accept=".pdf" onChange={handleFileChange} hidden/>
-                    </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                    <FloatingLabel label="Nationality">
-                        <Form.Control name="nationality" value={form.nationality} onChange={handleChange} />
                     </FloatingLabel>
                 </Col>
 
                 <Col md={6}>
                     <FloatingLabel label="Gender">
                         <Form.Select name="gender" value={form.gender} onChange={handleChange}>
-                        <option value="">-- Choose --</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
+                            <option value="">-- Choose --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
                         </Form.Select>
+                        <Form.Control.Feedback type="invalid">Gender is required.</Form.Control.Feedback>
                     </FloatingLabel>
-                </Col>
-
-                <Col md={6}>
-                    <FloatingLabel label="Religion">
-                        <Form.Control name="religion" value={form.religion} onChange={handleChange} />
-                    </FloatingLabel>
-                </Col>
-
-                <Col md={6}>
-                    <Form.Group>
-                        <Form.Label>Date of Birth</Form.Label>
-                        <Form.Control type="date" name="date_of_birth" value={form.date_of_birth} onChange={handleChange} />
-                            <DatePicker
-                                selected={form.date_applied}
-                                onChange={(date) => setForm({ ...form, date_applied: date })}
-                                showTimeSelect
-                                dateFormat="dd MMM yyyy HH:mm"
-                                className="form-control"
-                                placeholderText="Select date and time"
-                            />
-                        </Form.Group>
                 </Col>
 
                 <Col md={6}>
                     <FloatingLabel label="Marital Status">
                         <Form.Select name="marital_status" value={form.marital_status} onChange={handleChange}>
-                        <option value="">-- Choose --</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
+                            <option value="">-- Choose --</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
                         </Form.Select>
+                        <Form.Control.Feedback type="invalid">Marital Status is required.</Form.Control.Feedback>
                     </FloatingLabel>
                 </Col>
 
-                {/* <Col md={6}>
-                    <FloatingLabel label="Status">
-                        <Form.Select name="status" value={form.status} onChange={handleChange}>
-                        {['New', 'Scheduled', 'Interviewed', 'Hired', 'Rejected', 'Offered'].map((s) => (
-                            <option key={s} value={s}>{s}</option>
-                        ))}
-                        </Form.Select>
+                <Col md={6}>
+                    <FloatingLabel label="Age">
+                        <Form.Control 
+                            name="age" 
+                            value={form.age}
+                            onChange={handleChange}
+                            placeholder="Enter your age"
+                            required
+                        />
+                        <Form.Control.Feedback type="invalid">Age is required.</Form.Control.Feedback>
                     </FloatingLabel>
-                </Col> */}
+                </Col>
 
+                <Col md={6}>
+                    <Form.Group 
+                        controlId="date_of_birth" 
+                        className='d-flex flex-wrap justify-content-between align-items-center'
+                    >
+                        <Form.Label className='m-0 fs-14 color-label col ps-2'>Date of Birth</Form.Label>
+                        <DatePicker
+                            selected={form.date_of_birth}
+                            onChange={(date) => setForm({ ...form, date_of_birth: date })}
+                            dateFormat="dd MMM yyyy"
+                            className="form-control h-field"
+                            maxDate={addDays(new Date())}
+                            placeholderText="Select Date of Birth"
+                            wrapperClassName="col-lg-8 col-12"
+                        />
+                        <Form.Control.Feedback type="invalid">Date of Birth is required.</Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                    <FloatingLabel label="Nationality">
+                        <Form.Control 
+                            name="nationality" 
+                            value={form.nationality} 
+                            onChange={handleChange} 
+                            placeholder="Enter your Nationality"
+                        />
+                        <Form.Control.Feedback type="invalid">Nationality is required.</Form.Control.Feedback>
+                    </FloatingLabel>
+                </Col>
+
+                <Col md={6}>
+                    <FloatingLabel label="City">
+                        <Form.Control 
+                            name="city" 
+                            value={form.city} 
+                            onChange={handleChange} 
+                            placeholder="Enter your City"
+                        />
+                        <Form.Control.Feedback type="invalid">City is required.</Form.Control.Feedback>
+                    </FloatingLabel>
+                </Col>
+
+                <Col md={6}>
+                    <FloatingLabel label="State">
+                        <Form.Control 
+                            name="state" 
+                            value={form.state} 
+                            onChange={handleChange} 
+                            placeholder="Enter your State"
+                        />
+                        <Form.Control.Feedback type="invalid">State is required.</Form.Control.Feedback>
+                    </FloatingLabel>
+                </Col>
+
+                <Col md={6}>
+                    <FloatingLabel label="Country">
+                        <Form.Control 
+                            name="country" 
+                            value={form.country} 
+                            onChange={handleChange} 
+                            placeholder="Enter your Country"
+                        />
+                        <Form.Control.Feedback type="invalid">Country is required.</Form.Control.Feedback>
+                    </FloatingLabel>
+                </Col>
+                
                 <Col xs={12}>
                     <FloatingLabel label="Address">
-                        <Form.Control name="address" value={form.address} onChange={handleChange} />
+                        <Form.Control 
+                            as="textarea"
+                            name="address" 
+                            value={form.address} 
+                            onChange={handleChange} 
+                            placeholder="Enter your Address"
+                        />
+                        <Form.Control.Feedback type="invalid">Address is required.</Form.Control.Feedback>
                     </FloatingLabel>
                 </Col>
 
-                <Col md={4}>
-                    <FloatingLabel label="City">
-                        <Form.Control name="city" value={form.city} onChange={handleChange} />
-                    </FloatingLabel>
+                <Col md={6} className='d-flex flex-wrap justify-content-between align-items-center'>
+                    <div className=''>Upload Photo</div>
+                    <Form.Group controlId="imageUpload" className='upload-files'>
+                        <Form.Label className='mb-0 cursor-pointer d-block'>
+                            Photo <small className="d-block text-center text-muted">(max 1MB)</small>
+                        </Form.Label>
+                        <Form.Control 
+                            type="file"
+                            accept="image/*"
+                            name="image"
+                            onChange={handleFileChange} 
+                            hidden
+                        />
+                        {fileNamePhoto && (
+                            <div className="text-truncate small text-primary" title={fileNamePhoto}>
+                            📁 {fileNamePhoto}
+                            </div>
+                        )}
+                        <Form.Control.Feedback type="invalid">Image is required.</Form.Control.Feedback>
+                    </Form.Group>
                 </Col>
-
-                <Col md={4}>
-                    <FloatingLabel label="State">
-                        <Form.Control name="state" value={form.state} onChange={handleChange} />
-                    </FloatingLabel>
-                </Col>
-
-                <Col md={4}>
-                    <FloatingLabel label="Country">
-                        <Form.Control name="country" value={form.country} onChange={handleChange} />
-                    </FloatingLabel>
+                
+                <Col md={6} className='d-flex flex-wrap justify-content-between align-items-center'>
+                    <div className=''>Attach resume</div>
+                    <Form.Group controlId="resumeUpload" className='upload-files'>
+                        <Form.Label className='mb-0 cursor-pointer d-block'>
+                            <GrAttachment /> Attach Resume/CV (PDF)
+                            <small className="d-block text-center text-muted">(max 2MB, PDF only)</small>
+                        </Form.Label>
+                        <Form.Control
+                            type="file"
+                            name="resume"
+                            accept=".pdf"
+                            onChange={handleFileChange}
+                            hidden
+                        />
+                        
+                        {fileNameCV && (
+                            <div className="text-truncate small text-primary" title={fileNameCV}>
+                            📁 {fileNameCV}
+                            </div>
+                        )}
+                    </Form.Group>
                 </Col>
 
                 <Col xs={12} className="d-flex gap-2 mt-3">
@@ -261,6 +365,26 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                     <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
                 </Col>
             </Row>
-        </Form>
+        </StyleForm>
     );
 };
+
+const StyleForm = styled(Form) `
+    --font-placeholder: 14px;
+    .h-field {
+        height: 58px;
+    }
+    ::-webkit-input-placeholder {
+        font-family: var(--font-primary);
+        font-size:var(--font-placeholder);
+    }
+    ::-moz-placeholder { 
+        font-size:var(--font-placeholder);
+    }
+    :-ms-input-placeholder { 
+        font-size:var(--font-placeholder);
+    }
+    :-moz-placeholder { 
+        font-size:var(--font-placeholder);
+    }
+`

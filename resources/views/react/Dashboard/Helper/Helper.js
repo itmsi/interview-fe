@@ -1,4 +1,7 @@
+import React, { useEffect, useRef, useState } from 'react';
 import { FaSortUp, FaSortDown } from 'react-icons/fa';
+import { Tooltip as BsTooltip } from "bootstrap";
+import { useLocation } from 'react-router-dom';
 
 const placeholderProfileImage = '/assets/img/avatar.png';
 export const onImageProfileError = (e) => {
@@ -105,4 +108,68 @@ export const SortableHeader = ({ label, columnKey, sortConfig, onSort }) => {
             </div>
         </th>
     );
+};
+
+export const getBadgeVariant = (status) => {
+    switch (status) {
+    case 'Complete':
+        return 'success';
+    case 'submit':
+        return 'success';
+    case 'Interviewed':
+        return 'primary';
+    case 'save':
+        return 'secondary';
+    default:
+        return 'info';
+    }
+};
+
+export const Tooltips = ({children, title, position, nameClass = ''}) => {
+    const childRef = useRef(undefined);
+
+    useEffect(() => {
+        const t = new BsTooltip(childRef.current, {
+            title: title,
+            placement: position,
+            customClass: nameClass,
+            trigger: "hover"
+        })
+        return () => t.dispose()
+    }, [title])
+
+    return React.cloneElement(children, { ref: childRef })
+}
+
+export const useSystemFromUrl = (systemsData) => {
+    const location = useLocation();
+
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const slug = pathParts[0];
+
+    const matchedSystem = systemsData.find(
+        (system) => system.system_name.toLowerCase() === slug.toLowerCase()
+    );
+
+    return matchedSystem;
+};
+
+export const useWindowSize = () => {
+    const [width, setWidth] = useState(window.innerWidth);
+    
+    useEffect(() => {
+        const handleWindowSizeChange = () => {
+            setWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleWindowSizeChange);
+
+        return () => {
+            window.removeEventListener('resize', handleWindowSizeChange);
+        };
+    }, []);
+
+    const isMobile = width <= 1024;
+    
+    return { width, isMobile };
 };

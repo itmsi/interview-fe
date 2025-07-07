@@ -11,13 +11,14 @@
     <link rel="shortcut icon" href="{{ asset('/favicon.ico') }}" />
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('/apple-touch-icon.png') }}" />
     
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/app/css/app.css') }}">
 </head>
 
 <body>
     <div id="react-root" data-props="{{ json_encode($data, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
 
-    <script src="{{ asset('assets/js/app.js') }}"></script>
+    <script src="{{ asset('assets/app/js/app.js') }}"></script>
+    
 </body>
 
 </html>
