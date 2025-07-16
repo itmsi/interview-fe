@@ -19,6 +19,14 @@ class SecureHeadersMiddleware
     {
         $this->removeUnwantedHeaders($this->unwantedHeaderList);
         $response = $next($request);
+        
+        // CORS Headers
+        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        
+        // Security Headers (dimodifikasi untuk CORS)
         $response->headers->set('Expect-CT', 'max-age:86400, enforce');
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
         $response->headers->set('Content-Security-Policy', "script-src 'self' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://fonts.googleapis.com/  'unsafe-eval' 'unsafe-inline' *.jsdelivr.net; object-src 'self';");
