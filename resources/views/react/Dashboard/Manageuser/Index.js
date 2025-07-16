@@ -7,6 +7,7 @@ import { Popup } from '../Component/Popup';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { LoadingAnimation } from '../Component/Loading';
+import { ErrorTemplate, ServerErrorTemplate } from '../Component/ErrorTemplate';
 
 export const Index = ({ token, setPage }) => {
 
@@ -17,17 +18,27 @@ export const Index = ({ token, setPage }) => {
 
     useEffect(() => {
         setPage('User Management');
+        fetchUsers();
+    }, [token]);
+
+    const fetchUsers = () => {
+        setLoading(true);
+        setErrors(false);
         apiGet('/users', token)
             .then(data => {
                 setLoading(false);
-                setUsers(data?.data?.data || [])
+                setUsers(data?.data?.data || []);
             })
             .catch(err => {
-                console.error('Error fetching datax:', err);
+                console.error('Error fetching data:', err);
                 setErrors(true);
                 setLoading(false);
             });
-    }, [token]);
+    };
+
+    const handleRetry = () => {
+        fetchUsers();
+    };
 
     const handleSort = (key) => {
         let direction = 'asc';
@@ -158,10 +169,16 @@ export const Index = ({ token, setPage }) => {
                 autoClose: 3000
             });
             setShowDeletePopup(false);
-            setUserToDelete(null);
-            // Refresh data user
-            apiGet('/users', token)
-                .then(data => setUsers(data?.data?.data || []));
+            setUserToDelete(null);                // Refresh data user
+                apiGet('/users', token)
+                    .then(data => setUsers(data?.data?.data || []))
+                    .catch(err => {
+                        console.error('Failed to refresh users:', err);
+                        toast.error('Gagal memuat ulang data users', {
+                            position: "top-right",
+                            autoClose: 3000
+                        });
+                    });
         } catch (error) {
             toast.error('Gagal menghapus user: ' + error.message, {
                 position: "top-right",
@@ -239,7 +256,14 @@ export const Index = ({ token, setPage }) => {
                 setIsEdit(false);
                 setEditUserId(null);
                 apiGet('/users', token)
-                    .then(data => setUsers(data?.data?.data || []));
+                    .then(data => setUsers(data?.data?.data || []))
+                    .catch(err => {
+                        console.error('Failed to refresh users after update:', err);
+                        toast.error('Data berhasil diubah, tapi gagal memuat ulang tampilan', {
+                            position: "top-right",
+                            autoClose: 3000
+                        });
+                    });
                 setFormData({
                     username: '',
                     employee_id: '',
@@ -329,7 +353,10 @@ export const Index = ({ token, setPage }) => {
                     </tbody>
                 </table>
             </>)
-            :<>error!</>}
+            :<ServerErrorTemplate
+                onRetry={handleRetry} 
+                loading={loading}
+            />}
             {/* MODALS ADD NEW USERS */}
             <Popup
                 show={showAddUser}
