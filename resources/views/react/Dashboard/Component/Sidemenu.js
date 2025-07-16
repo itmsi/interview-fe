@@ -53,7 +53,7 @@ export const Sidemenu = ({ systems, profile }) => {
             )}
             <StyleSideMenu 
                 xs="2" 
-                className={`p-3 pe-0 vh-100${isMobile ? ' mobile-menu ' : ''}${isMenuOpen ? ' open' : ''}`}
+                className={`p-lg-3 p-0 pe-0 vh-100${isMobile ? ' mobile-menu ' : ''}${isMenuOpen ? ' open' : ''}`}
             >
                 <div className='page-sidebar overflow-auto h-100' >
                     {isMobile ?
@@ -82,7 +82,7 @@ export const Sidemenu = ({ systems, profile }) => {
                         {systems.map((system, idx) => {
                             const isOpen = openIndex === idx || isMenuGroupActive(system);
                             return (
-                            <li key={system.system_name + idx} className={`${isOpen ? ' current' : ''}`}>
+                            <li key={system.system_name + idx} className={`mb-2 ${isOpen ? ' current' : ''}`}>
                                 <div className="dropdown">
                                     <button
                                         className="btn btn-light w-100 text-start dropdown-toggle"
@@ -136,7 +136,7 @@ const HeaderMobile = styled.div`
     background-color:#fff;
     box-shadow: 15px -8px 15px #000;
     &.active {
-        transform: translateX(16rem);
+        transform: translateX(17.5rem);
     }
     button { 
         background: var(--color-main, #0253A5);
@@ -168,7 +168,7 @@ const StyleSideMenu = styled(Col)`
     top:0;
     .page-sidebar {
         padding: 1rem;
-        background-color: #FAFAFA;
+        background-color: #dfe8f2;
         border-radius: 10px;
     }
     li {
@@ -181,7 +181,8 @@ const StyleSideMenu = styled(Col)`
             padding:8px 10px;
             position: relative;
             font-size: 1rem;
-            
+            background-color: transparent;
+            border: none;
             &.active {
                 background-color:rgba(2, 83, 165, 0.08);
                 color:var(--color-main);
@@ -223,7 +224,7 @@ const StyleSideMenu = styled(Col)`
     }
     .current {
         .dropdown-toggle {
-            background-color:rgba(2, 83, 165, 0.08);
+            background-color:#fff;
             color:var(--color-main);
             font-family: var(--font-main-bold);
                 

@@ -38,12 +38,25 @@ const getHeaders = (token, extra = {}) => {
 }
 
 export const apiGet = async(endpoint, token) => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-        method: 'GET',
-        headers: getHeaders(token),
-    });
-    if (!response.ok) throw new Error('Failed to fetch');
-    return response.json();
+    try {
+        const response = await fetch(`${BASE_URL}${endpoint}`, {
+            method: 'GET',
+            headers: getHeaders(token),
+        });
+        if (!response.ok) {
+            let errorMessage = 'Failed to fetch';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData?.message || errorMessage;
+            } catch (e) {
+                // response is not JSON or other error
+            }
+            throw new Error(errorMessage);
+        }
+        return response.json();
+    } catch (error) {
+        throw new Error('URL tidak dapat diakses');
+    }
 }
 
 export const apiPost = async(endpoint, token, body) => {
@@ -173,3 +186,19 @@ export const useWindowSize = () => {
     
     return { width, isMobile };
 };
+
+export const getImageBase64 = async (imagePath) => {
+    try {
+        const response = await fetch(imagePath)
+        const blob = await response.blob()
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+        })
+    } catch (error) {
+        console.error('Failed to load image:', error)
+        return null
+    }
+}

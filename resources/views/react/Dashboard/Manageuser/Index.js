@@ -12,6 +12,7 @@ export const Index = ({ token, setPage }) => {
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [errors, setErrors] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
     useEffect(() => {
@@ -21,7 +22,11 @@ export const Index = ({ token, setPage }) => {
                 setLoading(false);
                 setUsers(data?.data?.data || [])
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error('Error fetching datax:', err);
+                setErrors(true);
+                setLoading(false);
+            });
     }, [token]);
 
     const handleSort = (key) => {
@@ -257,7 +262,8 @@ export const Index = ({ token, setPage }) => {
     };
     return (
         <React.Fragment>
-            {loading ? (
+            {!errors ?
+            loading ? (
                 <div>Loading...</div>
             ) : (<>
                 <Container fluid className='header-action my-2 pb-2'>
@@ -322,7 +328,8 @@ export const Index = ({ token, setPage }) => {
                         )}
                     </tbody>
                 </table>
-            </>)}
+            </>)
+            :<>error!</>}
             {/* MODALS ADD NEW USERS */}
             <Popup
                 show={showAddUser}

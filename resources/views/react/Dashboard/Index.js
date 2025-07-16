@@ -9,6 +9,8 @@ import { ToastContainer } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { Candidate } from './Interview/Candidate';
 import { ListInterview } from './Interview/ListInterview';
+import { ListPaySlip } from './Payslip/ListPaySlip';
+import { ListPaySlipTKA } from './Payslip/ListPaySlipTKA';
 
 const Index = (props) => {
     const { access_token, userInfo, system_access } = props;
@@ -37,7 +39,7 @@ const Index = (props) => {
                                 } 
                             />
                             <Route 
-                                path={`/hr-system/user-management`}
+                                path={`/central-user/user-management`}
                                 element={
                                     <ManageUser
                                         token={access_token}
@@ -53,6 +55,17 @@ const Index = (props) => {
                                         systems={system_access || []}
                                         token={access_token}
                                         setPage={setPage} 
+                                        loginInfo={userInfo}
+                                    />
+                                } 
+                            />
+                            <Route 
+                                path={`/interview/interview`}
+                                element={
+                                    <ListInterview
+                                        systems={system_access || []}
+                                        token={access_token}
+                                        setPage={setPage} 
                                         userInfo={userInfo}
                                     />
                                 } 
@@ -61,6 +74,28 @@ const Index = (props) => {
                                 path={`/interview/interview`}
                                 element={
                                     <ListInterview
+                                        systems={system_access || []}
+                                        token={access_token}
+                                        setPage={setPage} 
+                                        userInfo={userInfo}
+                                    />
+                                } 
+                            />
+                            <Route 
+                                path={`/payslip/wni`}
+                                element={
+                                    <ListPaySlip
+                                        systems={system_access || []}
+                                        token={access_token}
+                                        setPage={setPage} 
+                                        userInfo={userInfo}
+                                    />
+                                } 
+                            />
+                            <Route 
+                                path={`/payslip/wna`}
+                                element={
+                                    <ListPaySlipTKA
                                         systems={system_access || []}
                                         token={access_token}
                                         setPage={setPage} 

@@ -94,12 +94,16 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     Route::controller(DashboardController::class)->prefix('dashboard')->group(function () {
         Route::get('/', 'index')->name('dashboard');
     });
-    Route::controller(DashboardController::class)->prefix('hr-system')->group(function () {
+    Route::controller(DashboardController::class)->prefix('central-user')->group(function () {
         Route::get('/user-management', 'index');
         Route::get('/employee-management', 'index');
     });
     Route::controller(DashboardController::class)->prefix('interview')->group(function () {
         Route::get('/interview', 'index');
         Route::get('/candidate', 'index');
+    });
+    Route::controller(DashboardController::class)->prefix('payslip')->group(function () {
+        Route::get('/wni', 'index');
+        Route::get('/wna', 'index');
     });
 });

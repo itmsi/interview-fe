@@ -9,7 +9,7 @@ import { Popup } from '../../Component/Popup';
 import { InterviewScoreChart } from '../Module/Form/InterviewScoreChart';
 import { ModalScoreInterview } from './Form/ModalScoreInterview';
 
-export const FormInterview = ({ system, token, userInfo, data }) => {
+export const FormInterview = ({ system, token, loginInfo, data }) => {
     const [candidate, setCandidate] = useState(data);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [showProfile, setShowProfile] = useState(false);
@@ -67,7 +67,7 @@ export const FormInterview = ({ system, token, userInfo, data }) => {
             </div>
             <ListOfQuestion 
                 system={roleName} 
-                userInfo={userInfo} 
+                loginInfo={loginInfo} 
                 data={ListDataQuestion}
             />
         </>}
@@ -102,11 +102,11 @@ export const FormInterview = ({ system, token, userInfo, data }) => {
 
 const ListOfQuestion = ({ 
     roleName, 
-    userInfo, 
+    loginInfo, 
     data 
 }) => {
     
-    const { employee, user } = userInfo;
+    const { employee, user } = loginInfo;
     
     if (!data || !Array.isArray(data) || data.length === 0) {
         return <div className="mt-4 d-flex justify-content-center create-center h-statik align-items-center">No data available.</div>;

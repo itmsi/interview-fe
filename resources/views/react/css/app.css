@@ -34,6 +34,7 @@
     --font-main-bold:  'futura-bold', 'Poppins', sans-serif;
     --font-main-bold-italic:  'futura-bold-italic', 'Poppins', sans-serif;
     --font-secondary: 'Poppins', sans-serif;
+    --gradient: linear-gradient(to right, #003a73 0%, #0253a5 51%, #003a73 100%);
 }
 .btn-outline-primary {
     --bs-btn-color: #0253a5;
