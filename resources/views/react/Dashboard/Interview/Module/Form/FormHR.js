@@ -94,7 +94,7 @@ export const FormHR = ({
             defaultActiveKey={`${status === 'hr' ? 'siah' : 'cse' }`}
             className="mt-4 tab-question"
         >
-            {status === 'hr' && <>
+            {status === 'hr' && (
                 <Tab eventKey="siah" title="SIAH">
                     <QuestionSIAH 
                         form={formSiah}
@@ -103,6 +103,8 @@ export const FormHR = ({
                         interview_aspects={SIAH_ASPECTS}
                     />
                 </Tab>
+            )}
+            {status === 'hr' && (
                 <Tab eventKey="values" title="7 Values">
                     <QuestionSIAH 
                         form={formValues}
@@ -111,7 +113,7 @@ export const FormHR = ({
                         interview_aspects={VALUE_ASPECTS}
                     />
                 </Tab>
-            </>}
+            )}
             <Tab eventKey="cse" title="CSE">
                 <QuestionSIAH 
                     form={formCSE}
@@ -195,7 +197,7 @@ const QuestionSIAH = ({
     };
 
     return (
-        <StyledQuestion className='pt-4'>
+        <StyledQuestion fluid className='pt-4'>
             <Row>
                 <Form onSubmit={handleSubmit}>
                     <Accordion activeKey={activeAccordion} alwaysOpen onSelect={handleAccordionToggle}>

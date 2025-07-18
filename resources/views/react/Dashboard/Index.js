@@ -18,10 +18,6 @@ import { ListPaySlipTKA } from './Payslip/ListPaySlipTKA';
 const Index = (props) => {
     const { access_token, userInfo, system_access } = props;
     const [page, setPage] = useState('Dashboard');
-    console.log({
-        props
-    });
-    
     return (
         <Container fluid>
             <Row>

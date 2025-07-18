@@ -92,7 +92,7 @@ export const FormInterview = ({ system, token, loginInfo, data }) => {
                     setTotalPointValues={setTotalPointValues}
                     setTotalPointCSE={setTotalPointCSE}
                     setTotalPointSDT={setTotalPointSDT}
-                    status={roleName} 
+                    status={candidate.id_candidate == "cand-003" ? 'hr' : roleName} 
                 />
 
             </Offcanvas.Body>
