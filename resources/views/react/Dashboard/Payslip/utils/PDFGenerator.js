@@ -51,21 +51,21 @@ export const generatePayslipPDF = async (payslipData) => {
     const primaryColor = [2, 83, 165] // Dark blue
     const secondaryColor = [102, 126, 234] // Light blue
     const accentColor = [40, 167, 69] // Green
-    const lightGray = [248, 249, 250]
+    const lightGray = [255, 255, 255]
     const darkGray = [108, 117, 125]
     
     let yPos = 20
     
     // Header Section
     doc.setFillColor(...primaryColor)
-    doc.rect(0, 0, pageWidth, 35, 'F')
+    doc.rect(0, 0, pageWidth, 25, 'F')
         
     // Try to load and add logo
     try {
         const logoBase64 = await getImageBase64('/assets/img/motor-sights-international-logo-footer-white.png')
         if (logoBase64) {
             // Add logo image
-            doc.addImage(logoBase64, 'PNG', 20, 8, 30, 20) // Adjust dimensions as needed
+            doc.addImage(logoBase64, 'PNG', 20, 5, 20, 15) // Adjust dimensions as needed
         } else {
             throw new Error('Logo not loaded')
         }
@@ -86,19 +86,19 @@ export const generatePayslipPDF = async (payslipData) => {
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
     const headerPeriod = formatPeriod(payslipData.kolom_month)
-    doc.text(headerPeriod, pageWidth - 20, 20, { align: 'right' })
+    doc.text(headerPeriod, pageWidth - 20, 15, { align: 'right' })
 
-    yPos = 40
+    yPos = 30
     
     // Employee Information Section
     doc.setTextColor(...primaryColor)
-    doc.setFillColor(...lightGray)
+    // doc.setFillColor(...lightGray)
     doc.rect(10, yPos, pageWidth - 20, 8, 'F')
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
-    doc.text('EMPLOYEE INFORMATION', 15, yPos + 5)
+    // doc.text('EMPLOYEE INFORMATION', 15, yPos + 5)
     
-    yPos += 15
+    // yPos += 15
     
     // Employee details in two columns
     const employeeData = [
@@ -117,7 +117,7 @@ export const generatePayslipPDF = async (payslipData) => {
         theme: 'plain',
         styles: {
             fontSize: 9,
-            cellPadding: 2,
+            cellPadding: 1,
             textColor: [0, 0, 0]
         },
         columnStyles: {
@@ -126,10 +126,23 @@ export const generatePayslipPDF = async (payslipData) => {
             2: { fontStyle: 'bold', cellWidth: 35 },
             3: { cellWidth: 55 }
         },
-        margin: { left: 15, right: 15 }
+        margin: { left: 10, right: 15 }
     })
+
+    yPos = doc.lastAutoTable.finalY + 5
     
-    yPos = doc.lastAutoTable.finalY - 15
+    // Company Contributions Section
+    if (yPos > pageHeight - 60) {
+        doc.addPage()
+        yPos = 20
+    }
+    
+    doc.setFillColor(...lightGray)
+    doc.rect(10, yPos, pageWidth - 20, 8, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.text('Gaji dan Potongan', 10, yPos + 5)
+    
+    yPos += 8
     
     const earningsData = [
         ['Basic Salary', formatCurrency(payslipData.kolom_basic)],
@@ -142,19 +155,21 @@ export const generatePayslipPDF = async (payslipData) => {
         ['Accommodation', formatCurrency(payslipData.kolom_accomodation)],
         ['KPI Bonus', formatCurrency(payslipData.kolom_kpi)],
         ['Total KPI', formatCurrency(payslipData.kolom_total_kpi)],
-        ['Overtime Hours', `${payslipData.kolom_overtime_hour || '0'} hours`],
-        ['Total Overtime Pay', formatCurrency(payslipData.kolom_total_overtime)],
+        [`Total Overtime Pay ${payslipData.kolom_overtime_hour || '0'} hours` , formatCurrency(payslipData.kolom_total_overtime)],
         ['Point Payment', formatCurrency(payslipData.kolom_point_to_be_paid)],
         ['Sales Incentive', formatCurrency(payslipData.kolom_sales_incentive)],
         ['Other Allowances', formatCurrency(payslipData.kolom_others_tj)]
     ].filter(item => {
-        // Filter out zero values and empty overtime hours
         if (item[0].includes('hours')) {
             return getNumericValue(payslipData.kolom_overtime_hour) > 0
         }
         return item[1] !== 'Rp 0' && item[1] !== '-'
     })
     
+    const dataLeft = 10;
+    const colWidthLeft = 50;
+    const colWidthRight = 42;
+    const countColumns = (colWidthLeft + colWidthRight);
     // Add total earnings
     earningsData.push(['GROSS TOTAL', formatCurrency(payslipData.kolom_total_basic_allowance_incentive_bonus_pay_by_company_gross)])
     
@@ -167,12 +182,12 @@ export const generatePayslipPDF = async (payslipData) => {
         theme: 'striped',
         styles: {
             fontSize: 9,
-            cellPadding: 3,
+            cellPadding: 2,
             overflow: 'ellipsize', cellWidth: 'wrap'
         },
         columnStyles: {
-            0: { cellWidth: 60 },
-            1: { cellWidth: 40, halign: 'right' }
+            0: { cellWidth: colWidthLeft },
+            1: { cellWidth: colWidthRight, halign: 'right' }
         },
         didParseCell: function(data) {
             if (data.row.index === earningsData.length - 1) {
@@ -180,8 +195,8 @@ export const generatePayslipPDF = async (payslipData) => {
                 data.cell.styles.fillColor = [254, 255, 226]
             }
         },
-        margin: { left: 15, right: 15 },
-        tableWidth: '100'
+        margin: { left: dataLeft, right: 15 },
+        tableWidth: countColumns
     })
     
     // yPos = doc.lastAutoTable.finalY + 15
@@ -195,36 +210,39 @@ export const generatePayslipPDF = async (payslipData) => {
     // yPos += 15
     
     const deductionsData = [
-        ['APD (Safety Equipment)', formatCurrency(payslipData.kolom_apd)],
-        ['Transport Ticket', formatCurrency(payslipData.kolom_transport_ticket)],
-        ['Loan Deduction', formatCurrency(payslipData.kolom_loan)],
-        ['Unpaid Leave', formatCurrency(payslipData.kolom_unpaid_leave_defaulters_work)],
-        ['JHT (Employee 2%)', formatCurrency(payslipData.kolom_provident_fund_benefit_by_emp_jht_2_persen)],
-        ['Pension (Employee 1%)', formatCurrency(payslipData.kolom_pension_by_emp_jp_1_persen)],
-        ['Health Insurance (Employee 1%)', formatCurrency(payslipData.kolom_health_insurance_by_employee_1_persen)],
-        ['Adjustment Deduction', formatCurrency(payslipData.kolom_adjusment_cut)],
-        ['General Deduction', formatCurrency(payslipData.kolom_deduction)],
-        ['PPh 21 Tax', formatCurrency(payslipData.kolom_pph_21)],
-        ['Other Deductions', formatCurrency(payslipData.kolom_other_deduction)]
+        // ['APD (Safety Equipment)', formatCurrency(payslipData.kolom_apd)],
+        // ['Transport Ticket', formatCurrency(payslipData.kolom_transport_ticket)],
+        // ['Loan Deduction', formatCurrency(payslipData.kolom_loan)],
+        // ['Unpaid Leave', formatCurrency(payslipData.kolom_unpaid_leave_defaulters_work)],
+        ['BPJS JHT (Employee 2%)', formatCurrency(payslipData.kolom_provident_fund_benefit_by_emp_jht_2_persen)],
+        ['BPJS JP (Employee 1%)', formatCurrency(payslipData.kolom_pension_by_emp_jp_1_persen)],
+        ['BPJS KES (Employee 1%)', formatCurrency(payslipData.kolom_health_insurance_by_employee_1_persen)],
+        ['TAX', formatCurrency(payslipData.kolom_tax)],
+        // ['Pension (Employee 1%)', formatCurrency(payslipData.kolom_pension_by_emp_jp_1_persen)],
+        // ['Health Insurance (Employee 1%)', formatCurrency(payslipData.kolom_health_insurance_by_employee_1_persen)],
+        // ['Adjustment Deduction', formatCurrency(payslipData.kolom_adjusment_cut)],
+        // ['General Deduction', formatCurrency(payslipData.kolom_deduction)],
+        // ['PPh 21 Tax', formatCurrency(payslipData.kolom_pph_21)],
+        // ['Other Deductions', formatCurrency(payslipData.kolom_other_deduction)]
     ].filter(item => item[1] !== 'Rp 0')
     
     // Add total deductions
-    deductionsData.push(['TOTAL DEDUCTIONS', formatCurrency(payslipData.kolom_total_deduction)])
+    deductionsData.push(['TOTAL', formatCurrency(payslipData.kolom_total_deduction)])
     
     autoTable(doc, {
         startY: yPos,
         head: [
-            [{ content: 'TOTAL DEDUCTIONS', colSpan: 2, styles: { halign: 'center', fillColor: [195, 207, 226], textColor: [0, 0, 0], fontStyle: 'normal' } }]
+            [{ content: 'DEDUCTIONS', colSpan: 2, styles: { halign: 'center', fillColor: [195, 207, 226], textColor: [0, 0, 0], fontStyle: 'normal' } }]
         ],
         body: deductionsData,
         theme: 'striped',
         styles: {
             fontSize: 9,
-            cellPadding: 3
+            cellPadding: 2
         },
         columnStyles: {
-            0: { cellWidth: 60 },
-            1: { cellWidth: 40, halign: 'right' }
+            0: { cellWidth: colWidthLeft },
+            1: { cellWidth: colWidthRight, halign: 'right' }
         },
         didParseCell: function(data) {
             if (data.row.index === deductionsData.length - 1) {
@@ -232,46 +250,48 @@ export const generatePayslipPDF = async (payslipData) => {
                 data.cell.styles.fillColor = [255, 226, 226]
             }
         },
-        margin: { left: 115, right: 15 },
-        tableWidth: '100'
+        margin: { left: countColumns + dataLeft, right: 15 },
+        tableWidth: countColumns
     })
     
-    yPos = doc.lastAutoTable.finalY + 15
+    // yPos = doc.lastAutoTable.finalY + 15
     
-    // Company Contributions Section
-    if (yPos > pageHeight - 60) {
-        doc.addPage()
-        yPos = 20
-    }
+    // // Company Contributions Section
+    // if (yPos > pageHeight - 60) {
+    //     doc.addPage()
+    //     yPos = 20
+    // }
     
-    doc.setFillColor(...lightGray)
-    doc.rect(10, yPos, pageWidth - 20, 8, 'F')
-    doc.setFont('helvetica', 'bold')
-    doc.text('COMPANY CONTRIBUTIONS', 15, yPos + 5)
+    // doc.setFillColor(...lightGray)
+    // doc.rect(10, yPos, pageWidth - 20, 8, 'F')
+    // doc.setFont('helvetica', 'bold')
+    // doc.text('COMPANY CONTRIBUTIONS', 15, yPos + 5)
     
-    yPos += 15
+    // yPos += 15
     
     const contributionsData = [
-        ['JHT (Company 3.7%)', formatCurrency(payslipData.kolom_jht_by_company_37_persen)],
-        ['JKK (Company 0.24%)', formatCurrency(payslipData.kolom_jkk_by_company_024_persen)],
-        ['JKM (Company 0.30%)', formatCurrency(payslipData.kolom_jkm_by_company_030_persen)],
-        ['Pension (Company 2%)', formatCurrency(payslipData.kolom_jp_by_company_2_persen)],
-        ['Health Insurance (Company 4%)', formatCurrency(payslipData.kolom_kes_by_company_4_persen)],
-        ['TOTAL COMPANY CONTRIBUTION', formatCurrency(payslipData.kolom_total_by_company_1024_persen)]
+        ['BPJS JHT (Company 3.7%)', formatCurrency(payslipData.kolom_jht_by_company_37_persen)],
+        ['BPJS JP (Company 2%)', formatCurrency(payslipData.kolom_jp_by_company_2_persen)],
+        ['BPJS JKM (Company 0.30%)', formatCurrency(payslipData.kolom_jkm_by_company_030_persen)],
+        ['BPJS JKK (Company 0.24%)', formatCurrency(payslipData.kolom_jkk_by_company_024_persen)],
+        ['BPJS KES (Company 4%)', formatCurrency(payslipData.kolom_kes_by_company_4_persen)],
+        ['TOTAL', formatCurrency(payslipData.kolom_total_by_company_1024_persen)]
     ]
     
     autoTable(doc, {
         startY: yPos,
-        head: [],
+        head: [
+            [{ content: 'COMPANY CONTRIBUTIONS', colSpan: 2, styles: { halign: 'center', fillColor: [195, 207, 226], textColor: [0, 0, 0], fontStyle: 'normal' } }]
+        ],
         body: contributionsData,
         theme: 'striped',
         styles: {
             fontSize: 9,
-            cellPadding: 3
+            cellPadding: 2
         },
         columnStyles: {
-            0: { cellWidth: 120 },
-            1: { cellWidth: 60, halign: 'right' }
+            0: { cellWidth: colWidthLeft },
+            1: { cellWidth: colWidthRight, halign: 'right' }
         },
         didParseCell: function(data) {
             if (data.row.index === contributionsData.length - 1) {
@@ -279,130 +299,103 @@ export const generatePayslipPDF = async (payslipData) => {
                 data.cell.styles.fillColor = [226, 255, 226]
             }
         },
-        margin: { left: 15, right: 15 }
+        margin: { left: (countColumns * 2) + dataLeft, right: 15 },
+        tableWidth: countColumns
     })
     
-    yPos = doc.lastAutoTable.finalY + 15
+    yPos = doc.lastAutoTable.finalY + 5
     
-    // Summary Section
-    doc.setFillColor(...secondaryColor)
-    doc.rect(10, yPos, pageWidth - 20, 8, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFont('helvetica', 'bold')
-    doc.text('PAYSLIP SUMMARY', 15, yPos + 5)
-    
-    yPos += 15
-    
-    const summaryData = [
-        ['Gross Salary', formatCurrency(payslipData.kolom_total_basic_allowance_incentive_bonus_pay_by_company_gross)],
-        ['Total Deductions', `(${formatCurrency(payslipData.kolom_total_deduction)})`],
-        ['Tax Amount', formatCurrency(payslipData.kolom_tax)],
-        ['NET SALARY RECEIVED', formatCurrency(payslipData.kolom_total_received_nett)],
-        ['GRAND TOTAL', formatCurrency(payslipData.kolom_grand_total)]
+    const headersAbsensi = [
+        { header: "STD", dataKey: "STD" },
+        { header: "SCH", dataKey: "SCH" },
+        { header: "ACT", dataKey: "ACT" },
+        { header: "OFF", dataKey: "OFF" },
+        { header: "S1", dataKey: "S1" },
+        { header: "H", dataKey: "H" },
+        { header: "AL", dataKey: "AL" },
+        { header: "RL", dataKey: "RL" },
+        { header: "K", dataKey: "K" },
+        { header: "DW", dataKey: "DW" },
+        { header: "UL", dataKey: "UL" },
+        { header: "ML", dataKey: "ML" },
+        { header: "WFH", dataKey: "WFH" },
+        { header: "WFS", dataKey: "WFS" },
+        { header: "LATE", dataKey: "LATE" },
+        { header: "1/2", dataKey: "HALF" },
+    ];
+    const absensiData = [
+        {
+            STD: payslipData.kolom_std,
+            SCH: payslipData.kolom_sch,
+            ACT: payslipData.kolom_act,
+            OFF: payslipData.kolom_off,
+            S1: payslipData.kolom_s1,
+            H: payslipData.kolom_h,
+            AL: payslipData.kolom_al,
+            RL: payslipData.kolom_rl,
+            K: payslipData.kolom_k,
+            DW: payslipData.kolom_dw,
+            UL: payslipData.kolom_ul,
+            ML: payslipData.kolom_ml,
+            WFH: payslipData.kolom_wfh,
+            WFS: payslipData.kolom_wfs,
+            LATE: payslipData.kolom_late,
+            HALF: payslipData.kolom_half
+        }
     ]
     
     autoTable(doc, {
+        columns: headersAbsensi,
         startY: yPos,
-        head: [],
-        body: summaryData,
-        theme: 'plain',
+        body: absensiData,
         styles: {
-            fontSize: 11,
-            cellPadding: 4,
+            fontSize: 9,
+            cellPadding: 2,
             textColor: [0, 0, 0]
         },
-        columnStyles: {
-            0: { cellWidth: 120, fontStyle: 'bold' },
-            1: { cellWidth: 60, halign: 'right', fontStyle: 'bold' }
+        headStyles: {
+            fillColor: transparent,
+            textColor: 255,
+            fontStyle: 'bold',
         },
-        didParseCell: function(data) {
-            if (data.row.index === 3) { // NET SALARY RECEIVED
-                data.cell.styles.fillColor = [212, 237, 218]
-                data.cell.styles.fontSize = 12
-            }
-            if (data.row.index === 4) { // GRAND TOTAL
-                data.cell.styles.fillColor = [255, 243, 205]
-                data.cell.styles.fontSize = 12
-            }
-        },
-        margin: { left: 15, right: 15 }
+        theme: "grid",
+        margin: { left: 10, right: 10 }
     })
-    
+
+    // ======================================================
     yPos = doc.lastAutoTable.finalY + 20
     
-    // Attendance Information (if space allows)
-    if (yPos < pageHeight - 60) {
-        doc.setTextColor(...primaryColor)
-        doc.setFillColor(...lightGray)
-        doc.rect(10, yPos, pageWidth - 20, 8, 'F')
-        doc.setFont('helvetica', 'bold')
-        doc.text('ATTENDANCE INFORMATION', 15, yPos + 5)
-        
-        yPos += 15
-        
-        const attendanceData = [
-            ['Standard Days', payslipData.kolom_std || '0', 'Scheduled Days', payslipData.kolom_sch || '0'],
-            ['Actual Days', payslipData.kolom_act || '0', 'Days Off', payslipData.kolom_off || '0'],
-            ['Holiday', payslipData.kolom_h || '0', 'Sick Leave', payslipData.kolom_s1 || '0'],
-            ['Annual Leave', payslipData.kolom_al || '0', 'Late Days', payslipData.kolom_late || '0']
-        ]
-        
-        autoTable(doc, {
-            startY: yPos,
-            head: [],
-            body: attendanceData,
-            theme: 'plain',
-            styles: {
-                fontSize: 9,
-                cellPadding: 2
-            },
-            columnStyles: {
-                0: { fontStyle: 'bold', cellWidth: 35 },
-                1: { cellWidth: 25, halign: 'center' },
-                2: { fontStyle: 'bold', cellWidth: 35 },
-                3: { cellWidth: 25, halign: 'center' }
-            },
-            margin: { left: 15, right: 15 }
-        })
-        
-        yPos = doc.lastAutoTable.finalY + 10
-    }
-    
     // Footer
-    if (yPos > pageHeight - 30) {
+    if (yPos > pageHeight - 15) {
         doc.addPage()
-        yPos = pageHeight - 30
+        yPos = pageHeight - 15
     } else {
-        yPos = pageHeight - 30
+        yPos = pageHeight - 15
     }
     
-    // Add watermark
-    doc.setTextColor(200, 200, 200)
-    doc.setFontSize(50)
-    doc.setFont('helvetica', 'bold')
-    const watermarkText = 'CONFIDENTIAL'
-    const watermarkWidth = doc.getTextWidth(watermarkText)
-    doc.text(
-        watermarkText, 
-        (pageWidth - watermarkWidth) / 2, 
-        pageHeight / 2, 
-        { 
-            angle: 45,
-            align: 'center'
-        }
-    )
-    
-    doc.setTextColor(...darkGray)
-    doc.setFontSize(8)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Generated on: ' + new Date().toLocaleDateString('id-ID'), 15, yPos)
-    doc.text('This is a computer generated payslip and does not require signature.', pageWidth - 15, yPos, { align: 'right' })
+    // Tambahkan "Keterangan Lain Lain"
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("KETERANGAN LAIN LAIN:", 10, yPos - 20);
+
+    // Tambahkan garis putus-putus
+    doc.setLineWidth(0.1);
+    doc.setDrawColor(100);
+    doc.setLineDash([1], 0);
+    doc.line(10, yPos - 15, doc.internal.pageSize.getWidth() - 10, yPos - 15);
     
     // Add remarks if any
     if (payslipData.kolom_remarks) {
         yPos -= 10
         doc.text('Remarks: ' + payslipData.kolom_remarks, 15, yPos)
     }
+    doc.setTextColor(...darkGray)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.text("DISCLAIMER:", 10, yPos - 5);
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text('SLIP PEMBAYARAN GAJI DITUJUKAN BAGI KARYAWAN PT INDONESIA EQUIPMENT CENTRE MELALUI SURAT ELEKTRONIK DAN SAH TANPA TANDA TANGAN/STEMPEL PERUSAHAAN.\nPT INDONESIA EQUIPMENT CENTRE TIDAK BERTANGGUNG JAWAB ATAS SEGALA HAL YANG TIMBUL DILUAR KETENTUAN YANG BERLAKU TENTANG SLIP PEMBAYARAN GAJI KARYAWAN.', 10, yPos)
     
     // Generate filename
     const employeeName = payslipData.kolom_name?.replace(/[^a-zA-Z0-9]/g, '_') || 'Employee'

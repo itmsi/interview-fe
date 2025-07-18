@@ -5,6 +5,9 @@ import { Sidemenu } from './Component/Sidemenu';
 import { Header } from './Component/Header';
 import { Index as Home } from './Home/Index';
 import { Index as ManageUser } from './Manageuser/Index';
+import { System as ManageSystem } from './Manageuser/System';
+import { Menu as ManageMenu } from './Manageuser/Menu';
+import { Role as ManageRole } from './Manageuser/Role';
 import { ToastContainer } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { Candidate } from './Interview/Candidate';
@@ -15,6 +18,10 @@ import { ListPaySlipTKA } from './Payslip/ListPaySlipTKA';
 const Index = (props) => {
     const { access_token, userInfo, system_access } = props;
     const [page, setPage] = useState('Dashboard');
+    console.log({
+        props
+    });
+    
     return (
         <Container fluid>
             <Row>
@@ -39,9 +46,39 @@ const Index = (props) => {
                                 } 
                             />
                             <Route 
-                                path={`/central-user/user-management`}
+                                path={`/central-user/user`}
                                 element={
                                     <ManageUser
+                                        token={access_token}
+                                        setPage={setPage} 
+                                        userInfo={userInfo}
+                                    />
+                                } 
+                            />
+                            <Route 
+                                path={`/central-user/system`}
+                                element={
+                                    <ManageSystem
+                                        token={access_token}
+                                        setPage={setPage} 
+                                        userInfo={userInfo}
+                                    />
+                                } 
+                            />
+                            <Route 
+                                path={`/central-user/menu`}
+                                element={
+                                    <ManageMenu
+                                        token={access_token}
+                                        setPage={setPage} 
+                                        userInfo={userInfo}
+                                    />
+                                } 
+                            />
+                            <Route 
+                                path={`/central-user/role`}
+                                element={
+                                    <ManageRole
                                         token={access_token}
                                         setPage={setPage} 
                                         userInfo={userInfo}

@@ -2,6 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FaSortUp, FaSortDown } from 'react-icons/fa';
 import { Tooltip as BsTooltip } from "bootstrap";
 import { useLocation } from 'react-router-dom';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+// Extend dayjs with plugins
+dayjs.extend(customParseFormat);
 
 const placeholderProfileImage = '/assets/img/avatar.png';
 export const onImageProfileError = (e) => {
@@ -74,7 +79,14 @@ export const apiPost = async(endpoint, token, body) => {
         }
         throw new Error(errorMessage);
     }
-    return response.json();
+    
+    const responseData = await response.json();
+    
+    if (responseData?.status === false) {
+        throw new Error('Gagal untuk post');
+    }
+    
+    return responseData;
 }
 
 export const apiPut = async(endpoint, token, body = {}, options = {}) => {
@@ -89,7 +101,16 @@ export const apiPut = async(endpoint, token, body = {}, options = {}) => {
         body: JSON.stringify(body),
     });
     if (!response.ok) throw new Error('Failed to update');
-    return response.json();
+    
+    // Get response data
+    const responseData = await response.json();
+    
+    // Check if response status is false
+    if (responseData?.status === false) {
+        throw new Error('Gagal untuk update');
+    }
+    
+    return responseData;
 }
 
 export const apiDelete = async(endpoint, token, options = {}) => {
@@ -103,7 +124,16 @@ export const apiDelete = async(endpoint, token, options = {}) => {
         headers: getHeaders(token),
     });
     if (!response.ok) throw new Error('Failed to delete');
-    return response.json();
+    
+    // Get response data
+    const responseData = await response.json();
+    
+    // Check if response status is false
+    if (responseData?.status === false) {
+        throw new Error('Gagal untuk delete');
+    }
+    
+    return responseData;
 }
 
 export const SortableHeader = ({ label, columnKey, sortConfig, onSort }) => {
@@ -121,6 +151,81 @@ export const SortableHeader = ({ label, columnKey, sortConfig, onSort }) => {
             </div>
         </th>
     );
+};
+
+export const SortableDateHeader = ({ label, columnKey, sortConfig, onSort }) => {
+    const isActive = sortConfig.key === columnKey;
+    const isAsc = sortConfig.direction === 'asc';
+
+    const handleDateSort = () => {
+        onSort(columnKey, 'date'); // Pass 'date' as type indicator
+    };
+
+    return (
+        <th style={{ cursor: 'pointer' }} onClick={handleDateSort}>
+            <div className='d-flex justify-content-between align-items-center'>
+                {label}
+                <span className="sortTable">
+                    <span className={isActive && isAsc ? 'active' : ''}><FaSortUp /></span>
+                    <span className={`ceret-down${isActive && !isAsc ? ' active' : ''}`}><FaSortDown /></span>
+                </span>
+            </div>
+        </th>
+    );
+};
+
+export const sortDataByDate = (data, key, direction = 'asc') => {
+    return [...data].sort((a, b) => {
+        // Parse date format "28/05/2025 3:00:00" to Date object
+        const parseDate = (dateStr) => {
+            if (!dateStr) return new Date(0);
+            
+            // Split date and time
+            const [datePart, timePart = '00:00:00'] = dateStr.split(' ');
+            const [day, month, year] = datePart.split('/');
+            
+            // Create date string in format "YYYY-MM-DD HH:mm:ss"
+            const isoDateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${timePart}`;
+            return new Date(isoDateStr);
+        };
+
+        const dateA = parseDate(a[key]);
+        const dateB = parseDate(b[key]);
+
+        if (direction === 'asc') {
+            return dateA - dateB;
+        } else {
+            return dateB - dateA;
+        }
+    });
+};
+
+export const formatDate = (date, includeTime = true) => {
+    if (!date) return '';
+    
+    let dateObj;
+    
+    if (typeof date === 'string' && date.includes('/')) {
+        const [datePart, timePart = '00:00:00'] = date.split(' ');
+        const [day, month, year] = datePart.split('/');
+        const isoDateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${timePart}`;
+        dateObj = new Date(isoDateStr);
+    } else {
+        dateObj = new Date(date);
+    }
+    
+    if (isNaN(dateObj.getTime())) return '';
+    
+    let dateStr = dayjs(dateObj).format('DD MMM YYYY');
+    
+    if (includeTime) {
+        const hours = dateObj.getHours().toString().padStart(2, '0');
+        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+        const seconds = dateObj.getSeconds().toString().padStart(2, '0');
+        return `${dateStr} ${hours}:${minutes}:${seconds}`;
+    }
+    
+    return dateStr;
 };
 
 export const getBadgeVariant = (status) => {

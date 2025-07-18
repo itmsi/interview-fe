@@ -295,7 +295,7 @@ export const ListPaySlip = () => {
                         await generatePayslipPDF(item)
                     } catch (autoTableError) {
                         console.warn('AutoTable failed, using simple PDF generator:', autoTableError)
-                        await generatePayslipPDFSimple(item)
+                        // await generatePayslipPDFSimple(item)
                     }
                 }
             }

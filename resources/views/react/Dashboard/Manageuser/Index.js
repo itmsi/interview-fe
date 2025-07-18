@@ -15,6 +15,7 @@ export const Index = ({ token, setPage }) => {
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         setPage('User Management');
@@ -27,7 +28,7 @@ export const Index = ({ token, setPage }) => {
         apiGet('/users', token)
             .then(data => {
                 setLoading(false);
-                setUsers(data?.data?.data || []);
+                setUsers(data?.data || []);
             })
             .catch(err => {
                 console.error('Error fetching data:', err);
@@ -49,16 +50,30 @@ export const Index = ({ token, setPage }) => {
     };
 
     const sortedUsers = React.useMemo(() => {
-        if (!sortConfig.key) return users;
-        const sorted = [...users].sort((a, b) => {
-            const aValue = a.employee[sortConfig.key] ? a.employee[sortConfig.key].toString().toLowerCase() : '';
-            const bValue = b.employee[sortConfig.key] ? b.employee[sortConfig.key].toString().toLowerCase() : '';
+        // First filter by search term
+        let filteredData = users;
+        if (searchTerm) {
+            filteredData = users.filter(user => {
+                const searchLower = searchTerm.toLowerCase();
+                return (
+                    (user.user_name || '').toLowerCase().includes(searchLower) ||
+                    (user.user_email || '').toLowerCase().includes(searchLower) ||
+                    (user.employee?.alias || '').toLowerCase().includes(searchLower)
+                );
+            });
+        }
+        
+        // Then sort the filtered data
+        if (!sortConfig.key) return filteredData;
+        const sorted = [...filteredData].sort((a, b) => {
+            const aValue = a[sortConfig.key] ? a[sortConfig.key].toString().toLowerCase() : '';
+            const bValue = b[sortConfig.key] ? b[sortConfig.key].toString().toLowerCase() : '';
             if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
             if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
         return sorted;
-    }, [users, sortConfig]);
+    }, [users, sortConfig, searchTerm]);
     
     // HANDLE POPUP ADD USER
     const [titleModals, setTitleModals] = useState('');
@@ -234,10 +249,6 @@ export const Index = ({ token, setPage }) => {
 
             try {
                 if (isEdit && editUserId) {
-                    console.log({
-                        dataToSend
-                    });
-                    
                     // Edit user
                     await apiPut('/users', token, dataToSend, { params: { id: editUserId } });
                     toast.success('User berhasil diupdate!', {
@@ -284,6 +295,7 @@ export const Index = ({ token, setPage }) => {
             setValidated(true);
         }
     };
+    
     return (
         <React.Fragment>
             {!errors ?
@@ -292,7 +304,16 @@ export const Index = ({ token, setPage }) => {
             ) : (<>
                 <Container fluid className='header-action my-2 pb-2'>
                     <Row>
-                        <div className='p-0 d-flex justify-content-end'>
+                        <div className='col-md-6 p-0'>
+                            <Form.Control
+                                type="text"
+                                placeholder="Search user name, email, or alias..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
+                        </div>
+                        <div className='col-md-6 p-0 d-flex justify-content-end'>
                             <Button onClick={() => handleOpen('Add User')}  className='btn-action' ><FiPlusCircle className='me-1'/> Add New User</Button>
                         </div>
                     </Row>
@@ -302,15 +323,15 @@ export const Index = ({ token, setPage }) => {
                         <tr>
                             <SortableHeader
                                 label="Name"
-                                columnKey="name"
+                                columnKey="user_name"
                                 sortConfig={sortConfig}
-                                onSort={() => handleSort('name')}
+                                onSort={() => handleSort('user_name')}
                             />
                             <SortableHeader
                                 label="Email"
-                                columnKey="email"
+                                columnKey="user_email"
                                 sortConfig={sortConfig}
-                                onSort={() => handleSort('email')}
+                                onSort={() => handleSort('user_email')}
                             />
                             <SortableHeader
                                 label="Alias"
@@ -324,11 +345,11 @@ export const Index = ({ token, setPage }) => {
                     </thead>
                     <tbody>
                         {sortedUsers.map(user => (
-                            <tr key={user.id}>
-                                <td>{user?.employee?.name || 'n/a'}</td>
-                                <td>{user?.email || 'n/a'}</td>
+                            <tr key={user.user_id}>
+                                <td>{user?.user_name || 'n/a'}</td>
+                                <td>{user?.user_email || 'n/a'}</td>
                                 <td>{user?.employee?.alias || 'n/a'}</td>
-                                <td><div className={`p-1 status-table ${user?.employee?.status === 'active' ? 'text-bg-success' : 'text-bg-danger'} rounded-3`}>{user?.employee?.status || '-'}</div></td>
+                                <td><div className={`p-1 status-table ${user?.user_status === '1' ? 'text-bg-success' : 'text-bg-danger'} rounded-3`}>{user?.user_status === '1' ? 'Active' : 'Inactive'}</div></td>
                                 <td>
                                     <button 
                                         onClick={() => handleEditUser(user.id)}
@@ -347,7 +368,9 @@ export const Index = ({ token, setPage }) => {
                         ))}
                         {sortedUsers.length === 0 && (
                             <tr>
-                                <td colSpan="5" className="text-center">No users found.</td>
+                                <td colSpan="5" className="text-center">
+                                    {searchTerm ? `No users found for "${searchTerm}"` : 'No users found.'}
+                                </td>
                             </tr>
                         )}
                     </tbody>
@@ -393,18 +416,6 @@ export const Index = ({ token, setPage }) => {
             >
                 <div>Apakah Anda yakin ingin menghapus user ini?</div>
             </Popup>
-
-            {/* MODALS EDIT USERS LIST */}
-            {/* <Popup
-                show={showDeletePopup}
-                title="Konfirmasi Hapus User"
-                size="md"
-                onHide={handleCancelDelete}
-                onConfirm={handleConfirmDelete}
-                titleConfirm="Hapus"
-            >
-                <div>Apakah Anda yakin ingin menghapus user ini?</div>
-            </Popup> */}
         </React.Fragment>
     )
 }
@@ -421,7 +432,7 @@ const FormModalAddUser = ({
     loadingRole,
     handleRoleChange
  }) => (
-    <Form noValidate validated={validated}>
+    <Form noValidate validated={validated} className='select-floating-form'>
         <div className="form-floating select-filter-floating mb-3">
             <Select
                 options={employeeOptions}

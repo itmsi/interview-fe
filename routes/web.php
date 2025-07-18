@@ -95,7 +95,10 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
         Route::get('/', 'index')->name('dashboard');
     });
     Route::controller(DashboardController::class)->prefix('central-user')->group(function () {
-        Route::get('/user-management', 'index');
+        Route::get('/user', 'index');
+        Route::get('/system', 'index');
+        Route::get('/menu', 'index');
+        Route::get('/role', 'index');
         Route::get('/employee-management', 'index');
     });
     Route::controller(DashboardController::class)->prefix('interview')->group(function () {

@@ -193,26 +193,28 @@ body {
     color:var(--color-main)
 }
 .table-sort {
-    --bs-border-color: #f0f0f0
+    --bs-border-color: #dfe8f2
 }
 .table-sort th, .table-sort td {
     padding:12px 20px;
     font-size:14px;
 }
 .table-sort thead tr th {
-    background-color: #e5e7eb;
+    background-color: #dfe8f2;
     font-family: var(--font-main-bold);
-    font-weight: 600;
-    background: #e5e7eb;
-    border-bottom: 1px solid #e9edf4;
+    font-weight: 400;
+    border-bottom: 1px solid #dfe8f2;
 }
 .table-sort tbody td {
     color:#535353;
     vertical-align: middle;
+    font-family: var(--font-main);
+    font-size: 16px;
 }
 .table-sort tbody tr td:first-child {
     font-weight: 600;
     font-family: var(--font-secondary);
+    font-size: 14px;
 }
 .table-sort .status-table {
     font-family: var(--font-secondary);
@@ -245,6 +247,9 @@ body {
     align-items: flex-end;
     padding-bottom: 3px;
     border: var(--bs-border-width) solid var(--bs-border-color);
+}
+.select-filter-floating .is-invalid .react-select__control {
+    --bs-border-color: #dc3545;
 }
 .select-filter-floating .react-select__placeholder {
     color:var(--color-text);
