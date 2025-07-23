@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Form, Badge, Row, Col, Table, Container } from 'react-bootstrap';
-import { FaCloudUploadAlt, FaFileAlt, FaDownload, FaTrash, FaPlus, FaFileImage } from 'react-icons/fa';
+import { Card, Button, Form, Table, Container } from 'react-bootstrap';
+import { FaCloudUploadAlt, FaFileAlt, FaDownload, FaFileImage } from 'react-icons/fa';
 import { BsFiletypeDoc, BsFiletypePdf, BsFiletypeXls } from "react-icons/bs";
 import { toast } from 'react-toastify';
 import { apiGet, apiPostFormData, apiDelete, Tooltips } from '../../Helper/Helper';
@@ -95,20 +95,8 @@ export const DocumentOnBoarding = ({
             formData.append('candidate_id', candidateId);
             formData.append('on_board_documents_name', form.title);
             formData.append('create_by', loginInfo?.employee?.name || "tidak dikenal");
-            
-            // Try different possible field names - uncomment one at a time to test
-            formData.append('on_board_documents_file', form.file); // Current attempt
-            // formData.append('file', form.file); // Original
-            // formData.append('document', form.file); // Alternative 1
-            // formData.append('document_file', form.file); // Alternative 2
-            // formData.append('attachment', form.file); // Alternative 3
-            // formData.append('upload', form.file); // Alternative 4
 
-            console.log('FormData contents:');
-            for (let [key, value] of formData.entries()) {
-                console.log(key, ':', value instanceof File ? `File: ${value.name}` : value);
-            }
-
+            formData.append('on_board_documents_file', form.file);
             await apiPostFormData(endpoint, '/on-board-documents/multipart', token, formData);
             
             toast.success('Document uploaded successfully!');
@@ -145,7 +133,7 @@ export const DocumentOnBoarding = ({
             toast.success('Document deleted successfully!');
             setShowDeleteModal(false);
             setDeletingDocument(null);
-            fetchDocuments(); // Refresh the list
+            fetchDocuments();
             
         } catch (error) {
             console.error('Error deleting document:', error);
@@ -154,10 +142,6 @@ export const DocumentOnBoarding = ({
     };
 
     const getFileIcon = (filename) => {
-        console.log({
-            filename
-        });
-        
         if (!filename) return <FaFileAlt />;
         
         const extension = filename.split('.').pop()?.toLowerCase();

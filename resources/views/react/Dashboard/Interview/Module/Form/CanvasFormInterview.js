@@ -13,6 +13,8 @@ export const CanvasFormInterview = ({
     endpoint,
     token,
     loginInfo,
+    editingFormData,
+    isEditMode,
     onSaveSuccess
 }) => {
     const roleName = system?.roles?.[0]?.role_name;
@@ -28,6 +30,7 @@ export const CanvasFormInterview = ({
                     />
                     {selectedCandidate?.name || "-"}
                     <Badge bg={'primary'}>{selectedCandidate && selectedCandidate.id_candidate}</Badge>
+                    {/* {isEditMode && <Badge bg={'warning'} className="ms-2">Edit Mode</Badge>} */}
                 </Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
@@ -37,8 +40,10 @@ export const CanvasFormInterview = ({
                     endpoint={endpoint}
                     token={token}
                     loginInfo={loginInfo}
-                    status={roleName}
+                    status={roleName.toLowerCase()}
                     system={system}
+                    editingFormData={editingFormData}
+                    isEditMode={isEditMode}
                     onSaveSuccess={() => {
                         if (onSaveSuccess) onSaveSuccess();
                         onHide(); // Tutup offcanvas

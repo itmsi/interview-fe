@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Form, Badge, Table, Container, Row, Col } from 'react-bootstrap';
-import { FaPlus, FaUserCheck, FaUserTimes, FaTrash, FaStickyNote, FaCalendar } from 'react-icons/fa';
+import { Card, Button, Form, Badge, Table, Container } from 'react-bootstrap';
+import { FaPlus, FaUserCheck, FaUserTimes, FaTrash, FaCalendar } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { apiGet, apiPost, apiDelete } from '../../Helper/Helper';
+import { apiGet, apiPost, apiDelete, Tooltips } from '../../Helper/Helper';
 import { Popup } from '../../Component/Popup';
 import { AnimatedLoadingSpinner } from '../../Helper/Helper';
 
@@ -219,14 +219,16 @@ export const BackgroundCheck = ({
                                                 {getStatusBadge(check.background_check_reject)}
                                             </td>
                                             <td valign='middle' className="text-center">
-                                                <Button
-                                                    variant="outline-danger"
-                                                    size="sm"
-                                                    onClick={() => handleDeleteConfirm(check)}
-                                                    title="Delete"
-                                                >
-                                                    <FaTrash />
-                                                </Button>
+                                                <Tooltips title={"Delete background check"} position="top">
+                                                    <Button
+                                                        variant="outline-danger"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteConfirm(check)}
+                                                        title="Delete"
+                                                    >
+                                                        <FaTrash />
+                                                    </Button>
+                                                </Tooltips>
                                             </td>
                                         </tr>
                                     ))}

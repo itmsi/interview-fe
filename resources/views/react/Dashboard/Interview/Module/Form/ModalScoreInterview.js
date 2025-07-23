@@ -6,9 +6,7 @@ export const ModalScoreInterview = ({
     showScore,
     setShowScore,
     roleName,
-    dataScoreHR,
-    dataScoreHR2,
-    dataScoreTMT,
+    scoreData
 }) => {
     return (
         <Modal
@@ -20,18 +18,9 @@ export const ModalScoreInterview = ({
             <Modal.Body>
                 <Container>
                     <Row>
-                        {(roleName === "Super Admin" || roleName === "hr") ?<>
-                            <Col lg={6} xs={12}>
-                                <InterviewScoreChart metrics={dataScoreHR} />
-                            </Col>
-                            <Col lg={6} xs={12}>
-                                <InterviewScoreChart metrics={dataScoreHR2} />
-                            </Col>
-                        </>:
-                            <Col xs={12}>
-                                <InterviewScoreChart metrics={dataScoreTMT} />
-                            </Col>
-                        }
+                        <Col xs={12}>
+                            <InterviewScoreChart metrics={scoreData} />
+                        </Col>
                     </Row>
                 </Container>
             </Modal.Body>

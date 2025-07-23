@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Container, Accordion, FloatingLabel, Tabs, Tab } from 'react-bootstrap';
-import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { apiPost } from '../../../Helper/Helper';
 import { toast } from 'react-toastify';
@@ -21,7 +19,9 @@ export const FormHR = ({
     loginInfo,
     status = "hr",
     onSaveSuccess,
-    system
+    system,
+    editingFormData,
+    isEditMode
 }) => {
     const SIAH_ASPECTS = [
         { key: 'sincerity', label: 'Sincerity' },
@@ -78,6 +78,100 @@ export const FormHR = ({
         }), {})
     );
 
+    // Helper function to initialize form data from editing data
+    const initializeFormFromEdit = (editData, aspects, setFormFunction) => {
+        if (!editData || !editData.interview) return;
+        
+        const initializedForm = aspects.reduce((acc, aspect) => {
+            // More specific matching logic for each aspect
+            const matchingItem = editData.interview.find(item => {
+                if (!item.aspect) return false;
+                
+                // Exact aspect matching - case insensitive
+                const itemAspect = item.aspect.toLowerCase().trim();
+                const aspectLabel = aspect.label.toLowerCase().trim();
+                
+                // Direct match first
+                if (itemAspect === aspectLabel) return true;
+                
+                // Specific matching for different company values
+                if (item.company_value === 'SIAH') {
+                    return (
+                        (aspectLabel === 'sincerity' && itemAspect.includes('sincerity')) ||
+                        (aspectLabel === 'trustworthy' && itemAspect.includes('trustworthy')) ||
+                        (aspectLabel === 'altruism' && itemAspect.includes('altruism')) ||
+                        (aspectLabel === 'humble' && itemAspect.includes('humble'))
+                    );
+                }
+                
+                if (item.company_value === 'CSE') {
+                    return (
+                        (aspectLabel === 'self esteem' && itemAspect.includes('self esteem')) ||
+                        (aspectLabel === 'self efficacy' && itemAspect.includes('self efficacy')) ||
+                        (aspectLabel === 'locus of control' && itemAspect.includes('locus of control')) ||
+                        (aspectLabel === 'emotional stability' && itemAspect.includes('emotional stability'))
+                    );
+                }
+                
+                if (item.company_value === 'SDT') {
+                    return (
+                        (aspectLabel.includes('l2') && itemAspect.includes('l2')) ||
+                        (aspectLabel.includes('l3') && itemAspect.includes('l3')) ||
+                        (aspectLabel.includes('l4') && itemAspect.includes('l4')) ||
+                        (aspectLabel.includes('l5') && itemAspect.includes('l5')) ||
+                        (aspectLabel.includes('l6') && itemAspect.includes('l6'))
+                    );
+                }
+                
+                if (item.company_value === '7 Values' || item.company_value === 'VALUE') {
+                    return (
+                        (aspectLabel === 'giving meaning' && itemAspect.includes('giving meaning')) ||
+                        (aspectLabel === 'love to learn' && itemAspect.includes('love to learn')) ||
+                        (aspectLabel === 'happy practice' && itemAspect.includes('happy practice')) ||
+                        (aspectLabel === 'like innovation' && itemAspect.includes('like innovation')) ||
+                        (aspectLabel === 'happy to share' && itemAspect.includes('happy to share')) ||
+                        (aspectLabel === 'embrace failure' && itemAspect.includes('embrace failure')) ||
+                        (aspectLabel === 'habit of excellence' && itemAspect.includes('habit of excellence'))
+                    );
+                }
+                
+                return false;
+            });
+            
+            return {
+                ...acc,
+                [aspect.key]: {
+                    point: matchingItem ? matchingItem.score.toString() : '',
+                    question: matchingItem ? matchingItem.question : '',
+                    remark: matchingItem ? matchingItem.answer : ''
+                }
+            };
+        }, {});
+        
+        setFormFunction(initializedForm);
+    };
+
+    // Effect to handle edit mode initialization
+    useEffect(() => {
+        if (isEditMode && editingFormData) {
+            // Determine which form to initialize based on company values in the data
+            const companyValues = editingFormData.interview?.map(item => item.company_value) || [];
+            
+            if (companyValues.includes('SIAH')) {
+                initializeFormFromEdit(editingFormData, SIAH_ASPECTS, setFormSiah);
+            }
+            if (companyValues.includes('7 Values')) {
+                initializeFormFromEdit(editingFormData, VALUE_ASPECTS, setFormValues);
+            }
+            if (companyValues.includes('CSE')) {
+                initializeFormFromEdit(editingFormData, CSE_ASPECTS, setFormCSE);
+            }
+            if (companyValues.includes('SDT')) {
+                initializeFormFromEdit(editingFormData, SDT_ASPECTS, setFormSDT);
+            }
+        }
+    }, [isEditMode, editingFormData]);
+
     const getTotalPoint = (form, aspects) => {
         return aspects.reduce((sum, aspect) => {
             const val = parseInt(form[aspect.key]?.point, 10);
@@ -90,10 +184,6 @@ export const FormHR = ({
     const totalPointCSE = getTotalPoint(formCSE, CSE_ASPECTS);
     const totalPointSDT = getTotalPoint(formSDT, SDT_ASPECTS);
 
-    console.log({
-        system
-    });
-    
     return (
         <Tabs
             defaultActiveKey={`${status === 'hr' ? 'siah' : 'cse' }`}
@@ -112,6 +202,8 @@ export const FormHR = ({
                         loginInfo={loginInfo}
                         onSaveSuccess={onSaveSuccess}
                         system={system}
+                        isEditMode={isEditMode}
+                        editingFormData={editingFormData}
                     />
                 </Tab>
             )}
@@ -128,6 +220,8 @@ export const FormHR = ({
                         loginInfo={loginInfo}
                         onSaveSuccess={onSaveSuccess}
                         system={system}
+                        isEditMode={isEditMode}
+                        editingFormData={editingFormData}
                     />
                 </Tab>
             )}
@@ -143,6 +237,8 @@ export const FormHR = ({
                     loginInfo={loginInfo}
                     onSaveSuccess={onSaveSuccess}
                     system={system}
+                    isEditMode={isEditMode}
+                    editingFormData={editingFormData}
                 />
             </Tab>
             <Tab eventKey="sdt" title="SDT">
@@ -157,6 +253,8 @@ export const FormHR = ({
                     loginInfo={loginInfo}
                     onSaveSuccess={onSaveSuccess}
                     system={system}
+                    isEditMode={isEditMode}
+                    editingFormData={editingFormData}
                 />
             </Tab>
         </Tabs>
@@ -172,7 +270,9 @@ const QuestionSIAH = ({
     token,
     loginInfo,
     onSaveSuccess,
-    system
+    system,
+    isEditMode,
+    editingFormData
 }) => {
     const [isSubmit, setIsSubmit] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -230,45 +330,41 @@ const QuestionSIAH = ({
         try {
             setIsLoading(true);
             
-            // Format data sesuai struktur yang diminta
-            const postData = {
-                schedule_interview_id: itemSchedule?.id || itemSchedule?.schedule_interview_id,
-                interviews: [{
-                    company_value: titleForm,
-                    comment: "kosong",
-                    detail_interviews: interview_aspects.map(aspect => ({
-                        aspect: aspect.label,
-                        question: form[aspect.key].question,
-                        answer: form[aspect.key].remark,
-                        score: parseInt(form[aspect.key].point) || 0,
-                    }))
-                }],
-                assigneds: [
-                    {
-                        cum_id: loginInfo?.employee?.id || loginInfo?.id,
-                        assigned_name: loginInfo?.employee?.name || loginInfo?.name || "Unknown",
-                        assigned_email: loginInfo?.employee?.email || loginInfo?.email || "",
-                        assigned_role: system?.roles?.[0]?.role_name || 'role_name',
-                        assigned_role_alias: system?.roles?.[0]?.role_slug || 'role_slug'
-                    }
-                ]
-            };
-            const params = {
-                systemName: "interview",
-                menuName: "interview",
-                permissionName: "create"
-            };
-            const response = await apiPost(
-                endpoint, 
-                '/interview/batch?permissionName=create&menuName=interview&systemName=interview', 
-                token, 
-                postData
-            );
+                // Create mode - original logic
+                const postData = {
+                    schedule_interview_id: itemSchedule?.id || itemSchedule?.schedule_interview_id,
+                    interviews: [{
+                        company_value: titleForm,
+                        comment: "tidak ada komentar",
+                        detail_interviews: interview_aspects.map(aspect => ({
+                            aspect: aspect.label,
+                            question: form[aspect.key].question,
+                            answer: form[aspect.key].remark,
+                            score: parseInt(form[aspect.key].point) || 0,
+                        }))
+                    }],
+                    assigneds: [
+                        {
+                            cum_id: loginInfo?.employee?.id || loginInfo?.id,
+                            assigned_name: loginInfo?.employee?.name || loginInfo?.name || "Unknown",
+                            assigned_email: loginInfo?.employee?.email || loginInfo?.email || "",
+                            assigned_role: system?.roles?.[0]?.role_name || 'role_name',
+                            assigned_role_alias: system?.roles?.[0]?.role_slug || 'role_slug'
+                        }
+                    ]
+                };
+                
+                const response = await apiPost(
+                    endpoint, 
+                    '/interview/batch-upsert', 
+                    token, 
+                    postData
+                );
+
+                toast.success(`${titleForm} form submitted successfully!`);
+            
 
             setIsSubmit(true);
-            toast.success(`${titleForm} form submitted successfully!`);
-            
-            console.log('Form submitted successfully:', response);
             
             // Panggil callback untuk menutup offcanvas
             if (onSaveSuccess) {
@@ -363,7 +459,10 @@ const QuestionSIAH = ({
                             variant="success" 
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Saving...' : `Save ${titleForm}`}
+                            {isLoading 
+                                ? (isEditMode ? 'Updating...' : 'Saving...') 
+                                : (isEditMode ? `Update ${titleForm}` : `Save ${titleForm}`)
+                            }
                         </Button>
                         {isSubmit && 
                             <Button type="button" variant="success" className="ms-2">

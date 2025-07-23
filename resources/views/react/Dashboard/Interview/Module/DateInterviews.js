@@ -6,11 +6,12 @@ import { FaRegPenToSquare, FaRegTrashCan, FaChevronDown, FaChevronUp, FaPlus, Fa
 import { Popup } from '../../Component/Popup';
 import setHours from "date-fns/setHours";
 import setMinutes from "date-fns/setMinutes";
-import { apiPost, apiPatch, apiDelete, getBadgeVariant, apiGet, AnimatedLoadingSpinner } from '../../Helper/Helper';
+import { apiPost, apiPatch, apiDelete, apiGet, AnimatedLoadingSpinner, Tooltips } from '../../Helper/Helper';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { CanvasFormInterview } from './Form/CanvasFormInterview';
+import { ModalScoreInterview } from './Form/ModalScoreInterview';
 
 dayjs.extend(customParseFormat);
 
@@ -27,6 +28,8 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
     const [showFormInterview, setShowFormInterview] = useState(false);
     const [selectedScheduleId, setSelectedScheduleId] = useState(null);
     const [itemSchedule, setItemSchedule] = useState(null);
+    const [editingFormData, setEditingFormData] = useState(null);
+    const [isEditMode, setIsEditMode] = useState(false);
     const [showDeleteFormConfirm, setShowDeleteFormConfirm] = useState(false);
     const [deletingForm, setDeletingForm] = useState(null);
 
@@ -52,26 +55,38 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
 
             const response = await apiGet(endpoint, `/date-interview`, token, { params: params });
 
-            
             const transformedData = (response?.data || []).map(item => {
                 // Transform the new interview structure to match the expected formInterviews format
                 const formInterviews = [];
                 
                 if (item.interview && Array.isArray(item.interview)) {
                     item.interview.forEach(interviewGroup => {
+                        // Each interview group represents one interviewer with their form interviews
+                        const transformedFormInterview = {
+                            interview_id: interviewGroup.form_interviews?.[0]?.interview_id || null, // Use first interview_id as identifier
+                            assigned_name: interviewGroup.assigned_name,
+                            assigned_role_alias: interviewGroup.assigned_role_alias,
+                            interview: [], // This will contain the flattened questions/forms
+                            form_interviews: interviewGroup.form_interviews || [], // Keep original structure for reference
+                            data_score: [],
+                        };
+                        
+                        // Collect data_score from questions.total_score
+                        const dataScoreArray = [];
+                        
+                        // Flatten all form interviews into a single interview array
                         if (interviewGroup.form_interviews && Array.isArray(interviewGroup.form_interviews)) {
                             interviewGroup.form_interviews.forEach(formInterview => {
-                                // Create a form interview object with the new structure
-                                const transformedFormInterview = {
-                                    interview_id: formInterview.interview_id,
-                                    assigned_name: interviewGroup.assigned_name,
-                                    assigned_role_alias: interviewGroup.assigned_role_alias,
-                                    interview: [] // This will contain the flattened questions/forms
-                                };
-                                
-                                // Flatten the questions structure
                                 if (formInterview.questions && Array.isArray(formInterview.questions)) {
                                     formInterview.questions.forEach(questionGroup => {
+                                        // Extract total_score for data_score array
+                                        if (questionGroup.total_score !== undefined && questionGroup.total_score !== null) {
+                                            transformedFormInterview.data_score.push({
+                                                company_value: questionGroup.company_value,
+                                                total_score: questionGroup.total_score
+                                            });
+                                        }
+                                        
                                         if (questionGroup.forms && Array.isArray(questionGroup.forms)) {
                                             questionGroup.forms.forEach(form => {
                                                 transformedFormInterview.interview.push({
@@ -81,16 +96,15 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
                                                     answer: form.answer || "",
                                                     score: form.score || 0,
                                                     assigned_name: form.assigned_name,
-                                                    assigned_role_alias: form.assigned_role_alias
+                                                    assigned_role_alias: form.assigned_role_alias,
                                                 });
                                             });
                                         }
                                     });
                                 }
-                                
-                                formInterviews.push(transformedFormInterview);
                             });
                         }
+                        formInterviews.push(transformedFormInterview);
                     });
                 }
                 
@@ -113,8 +127,7 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
                     duration: item.schedule_interview_duration,
                     formInterviews: formInterviews,
                 };
-            });
-            
+            });            
             setDateShedule(transformedData);
         } catch (error) {
             console.error('Error fetching schedule interview:', error);
@@ -335,6 +348,8 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
     const handleCreateFormInterview = (schedule) => {
         setItemSchedule(schedule);
         setSelectedScheduleId(schedule.id);
+        setEditingFormData(null);
+        setIsEditMode(false);
         setShowFormInterview(true);
     };
 
@@ -363,11 +378,68 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
         setShowFormInterview(false);
         setSelectedScheduleId(null);
         setItemSchedule(null);
+        setEditingFormData(null);
+        setIsEditMode(false);
     };
 
     const handleDeleteFormInterview = (form, scheduleId) => {
         setDeletingForm({ formData: form, scheduleId: scheduleId });
         setShowDeleteFormConfirm(true);
+    };
+
+    const handleEditFormInterview = (form, scheduleId) => {
+        const schedule = dateSchedule.find(s => s.id === scheduleId);
+        setItemSchedule(schedule);
+        setSelectedScheduleId(scheduleId);
+        setEditingFormData(form);
+        setIsEditMode(true);
+        setShowFormInterview(true);
+    };
+
+    const handleUpdateFormInterview = async () => {
+        if (!editingFormInterview) return;
+
+        const params = {
+            candidate_id: editingFormInterview.formData.interview_id,
+            permissionName: "read",
+            menuName: "interview",
+            systemName: "interview"
+        };
+
+        try {
+            const interviewId = editingFormInterview.formData.interview_id;
+            const updateData = {
+                // Add your update data here based on what needs to be updated
+                interview: editingFormInterview.formData.interview
+            };
+
+            await apiPatch(endpoint, `/interview/${interviewId}`, token, updateData, {
+                params: params
+            });
+            
+            // Update local state if needed
+            setDateShedule(prev => prev.map(schedule => {
+                if (schedule.id === editingFormInterview.scheduleId) {
+                    return {
+                        ...schedule,
+                        formInterviews: (schedule.formInterviews || []).map(form => {
+                            if (form.interview_id === interviewId) {
+                                return { ...form, ...updateData };
+                            }
+                            return form;
+                        })
+                    };
+                }
+                return schedule;
+            }));
+
+            setShowEditFormInterview(false);
+            setEditingFormInterview(null);
+            
+            toast.success('Form interview updated successfully!');
+        } catch (error) {
+            toast.error('Failed to update form interview: ' + error.message);
+        }
     };
 
     const handleConfirmDeleteForm = async () => {
@@ -491,9 +563,10 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
                 endpoint={endpoint}
                 token={token}
                 loginInfo={loginInfo}
+                editingFormData={editingFormData}
+                isEditMode={isEditMode}
                 onSaveSuccess={() => {
-                    // Callback setelah save berhasil
-                    console.log('Form interview saved successfully');
+                    fetchScheduleData();
                 }}
             />
 
@@ -503,22 +576,26 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
                 onDelete={handleDeleteDateSchedule}
                 onToggleExpand={toggleExpand}
                 expandedSchedules={expandedSchedules}
+                system={system}
                 onCreateFormInterview={handleCreateFormInterview}
                 onDeleteFormInterview={handleDeleteFormInterview}
+                onEditFormInterview={handleEditFormInterview}
             />
         </div>
     </>)
 }
 
 const ListDateInterview = ({ 
+    system,
     data,
     onEdit,
     onDelete,
     onToggleExpand,
     expandedSchedules,
     onCreateFormInterview,
-    onDeleteFormInterview
-}) => {
+    onDeleteFormInterview,
+    onEditFormInterview
+}) => {    
     return(
         <div className="card-body">
             <div className="table-responsive">
@@ -528,7 +605,7 @@ const ListDateInterview = ({
                             <th>Created by</th>
                             <th>Assigned</th>
                             <th>Date</th>
-                            <th>Action</th>
+                            <th className='text-center'>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -540,8 +617,8 @@ const ListDateInterview = ({
                             data.map((ref, idx) => (
                                 <React.Fragment key={idx}>
                                     <tr>
-                                        <td>{ref.name}</td>
-                                        <td>
+                                        <td valign='middle'>{ref.name}</td>
+                                        <td valign='middle'>
                                         <div className='titleRemark'>
                                             {Array.isArray(ref.interviewer)
                                                 ? ref.interviewer.map((name, idx) => (
@@ -553,36 +630,46 @@ const ListDateInterview = ({
                                             }
                                         </div>
                                     </td>
-                                    <td>{ref.date} - {ref.time}</td>
-                                    <td>
-                                        <button 
-                                            onClick={() => onEdit(ref.id)}
-                                            className="btn btn-sm btn-transparent me-2"
-                                            title="Edit Schedule"
-                                        >
-                                            <FaRegPenToSquare />
-                                        </button>
-                                        <button 
-                                            onClick={() => onCreateFormInterview(ref)}
-                                            className="btn btn-sm btn-transparent me-2"
-                                            title="Create Form Interview"
-                                        >
-                                            <FaPlus />
-                                        </button>
-                                        <button 
-                                            className="btn btn-sm btn-transparent me-2"
-                                            onClick={() => onDelete(ref.id)}
-                                            title="Delete Schedule"
-                                        >
-                                            <FaRegTrashCan />
-                                        </button>
-                                        <button 
-                                            className="btn btn-sm btn-transparent"
-                                            onClick={() => onToggleExpand(ref)}
-                                            title={expandedSchedules[ref.id] ? "Collapse" : "Expand"}
-                                        >
-                                            {expandedSchedules[ref.id] ? <FaChevronUp /> : <FaChevronDown />}
-                                        </button>
+                                    <td valign='middle'>{ref.date} - {ref.time}</td>
+                                    <td valign='middle' className='text-center'>
+                                        
+                                        <Tooltips title={"Edit Date Interview"} position="top">
+                                            <button 
+                                                onClick={() => onEdit(ref.id)}
+                                                className="btn btn-sm btn-transparent me-2"
+                                                title="Edit Schedule"
+                                            >
+                                                <FaRegPenToSquare />
+                                            </button>
+                                        </Tooltips>
+                                            
+                                        <Tooltips title={"Create Form Interview"} position="top">
+                                            <button 
+                                                onClick={() => onCreateFormInterview(ref)}
+                                                className="btn btn-sm btn-transparent me-2"
+                                            >
+                                                <FaPlus />
+                                            </button>
+                                        </Tooltips>
+                                            
+                                        <Tooltips title={"Delete Date Interview"} position="top">
+                                            <button 
+                                                className="btn btn-sm btn-transparent me-2"
+                                                onClick={() => onDelete(ref.id)}
+                                                title="Delete Schedule"
+                                            >
+                                                <FaRegTrashCan />
+                                            </button>
+                                        </Tooltips>
+                                            
+                                        <Tooltips title={expandedSchedules[ref.id] ? "Collapse" : "Expand"} position="top">
+                                            <button 
+                                                className="btn btn-sm btn-transparent"
+                                                onClick={() => onToggleExpand(ref)}
+                                            >
+                                                {expandedSchedules[ref.id] ? <FaChevronUp /> : <FaChevronDown />}
+                                            </button>
+                                        </Tooltips>
                                     </td>
                                 </tr>
                                 <tr>
@@ -590,9 +677,11 @@ const ListDateInterview = ({
                                         <Collapse in={expandedSchedules[ref.id]}>
                                             <div className="px-3 py-2 bg-light">
                                                 <FormInterviewList 
+                                                    system={system}
                                                     formInterviews={ref.formInterviews || []}
                                                     scheduleId={ref.id}
                                                     onDeleteFormInterview={onDeleteFormInterview}
+                                                    onEditFormInterview={onEditFormInterview}
                                                 />
                                             </div>
                                         </Collapse>
@@ -681,7 +770,13 @@ const AddSchduleInterview = ({ form, setForm }) => {
     )
 }
 
-const FormInterviewList = ({ formInterviews, scheduleId, onDeleteFormInterview }) => {
+const FormInterviewList = ({ 
+    system,
+    formInterviews,
+    scheduleId,
+    onDeleteFormInterview,
+    onEditFormInterview 
+}) => {
 
     const getFormStatus = (formData) => {
         if (!formData.interview || !Array.isArray(formData.interview) || formData.interview.length === 0) {
@@ -709,8 +804,17 @@ const FormInterviewList = ({ formInterviews, scheduleId, onDeleteFormInterview }
         );
     }
 
+    const [showScore, setShowScore] = useState(false);
+    const [dataScore, setdataScore] = useState([]);
+    const handleShowScore = (form) => {
+        console.log({form});
+        setdataScore(form.data_score || []);
+        setShowScore(true);
+    }
+    
+    const roleName = system?.roles?.[0]?.role_name;
     return (
-        <Row className="row">
+        <Row className="g-3">
             {formInterviews.map((form, idx) => {
                 const status = getFormStatus(form);
                 const totalQuestions = form.interview ? form.interview.length : 0;
@@ -719,7 +823,7 @@ const FormInterviewList = ({ formInterviews, scheduleId, onDeleteFormInterview }
                 ).length : 0;
                 
                 return (
-                    <div key={idx} className="col-md-6 mb-3">
+                    <Col md={6} xs={12} key={idx}>
                         <div className="card border">
                             <div className="card-body p-3">
                                 <h6 className="card-title mb-2 font-primary-bold fw-normal">
@@ -734,9 +838,6 @@ const FormInterviewList = ({ formInterviews, scheduleId, onDeleteFormInterview }
                                 <p className="card-text small mb-1 fs-14">
                                     Questions : {totalQuestions} ({answeredQuestions} answered)
                                 </p>
-                                <p className="card-text small mb-1 fs-14">
-                                    Status : <Badge bg={getBadgeVariant(status)}>{status}</Badge>
-                                </p>
                                 {form.interview && form.interview.length > 0 && (
                                     <p className="card-text small mb-1 fs-14">
                                         Company Values : 
@@ -748,28 +849,49 @@ const FormInterviewList = ({ formInterviews, scheduleId, onDeleteFormInterview }
                                     </p>
                                 )}
                                 <div className="d-flex gap-2 mt-3">
-                                    <button className="btn fs-12 btn-sm btn-outline-secondary">
-                                        <FaRegPenToSquare className='fs-6' /> Edit
-                                    </button>
-                                    <button className="fs-12 btn btn-sm btn-outline-secondary">
-                                        <FaChartSimple className='fs-6' /> Score
-                                    </button>
-                                    <button className="fs-12 btn btn-sm btn-outline-secondary">
-                                        <FaRegFilePdf className='fs-6' /> PDF
-                                    </button>
-                                    <button 
-                                        className="fs-12 btn btn-sm btn-outline-danger"
-                                        onClick={() => onDeleteFormInterview(form, scheduleId)}
-                                        title="Delete Form Interview"
-                                    >
-                                        <FaRegTrashCan className='fs-6' /> Delete
-                                    </button>
+                                    <Tooltips title={"Edit Form Interview"} position="top">
+                                        <button 
+                                            className="btn fs-12 btn-sm btn-outline-secondary"
+                                            onClick={() => onEditFormInterview(form, scheduleId)}
+                                            title="Edit Form Interview"
+                                        >
+                                            <FaRegPenToSquare className='fs-6' /> Edit
+                                        </button>
+                                    </Tooltips>
+                                    <Tooltips title={"Show Score"} position="top">
+                                        <button 
+                                            className="fs-12 btn btn-sm btn-outline-secondary"
+                                            onClick={() => handleShowScore(form)}
+                                        >
+                                            <FaChartSimple className='fs-6' /> Score
+                                        </button>
+                                    </Tooltips>
+                                    <Tooltips title={"Download PDF"} position="top">
+                                        <button className="fs-12 btn btn-sm btn-outline-secondary">
+                                            <FaRegFilePdf className='fs-6' /> PDF
+                                        </button>
+                                    </Tooltips>
+                                    <Tooltips title={"Delete Form Interview"} position="top">
+                                        <button 
+                                            className="fs-12 btn btn-sm btn-outline-danger"
+                                            onClick={() => onDeleteFormInterview(form, scheduleId)}
+                                        >
+                                            <FaRegTrashCan className='fs-6' /> Delete
+                                        </button>
+                                    </Tooltips>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Col>
                 );
             })}
+
+            <ModalScoreInterview
+                showScore={showScore}
+                setShowScore={setShowScore}
+                roleName={roleName.toLowerCase()}
+                scoreData={dataScore}
+            />
         </Row>
     );
 };
