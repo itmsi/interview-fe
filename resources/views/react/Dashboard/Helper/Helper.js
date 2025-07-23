@@ -32,8 +32,6 @@ export const isMenuGroupActive = (system) => {
     );
 };
 
-const BASE_URL = process.env.REACT_APP_ENDPOINT_APP;
-
 const getHeaders = (token, extra = {}) => {
     return {
         'Authorization': `Bearer ${token}`,
@@ -42,9 +40,17 @@ const getHeaders = (token, extra = {}) => {
     };
 }
 
-export const apiGet = async(endpoint, token) => {
+export const apiGet = async(BASE_URL, endpoint, token, options = {}) => {
     try {
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
+        let url = `${BASE_URL}${endpoint}`;
+        
+        // Add query parameters if provided
+        if (options.params && typeof options.params === 'object') {
+            const query = new URLSearchParams(options.params).toString();
+            url += `?${query}`;
+        }
+        
+        const response = await fetch(url, {
             method: 'GET',
             headers: getHeaders(token),
         });
@@ -64,7 +70,7 @@ export const apiGet = async(endpoint, token) => {
     }
 }
 
-export const apiPost = async(endpoint, token, body) => {
+export const apiPost = async(BASE_URL, endpoint, token, body) => {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: getHeaders(token, { 'Content-Type': 'application/json' }),
@@ -89,7 +95,36 @@ export const apiPost = async(endpoint, token, body) => {
     return responseData;
 }
 
-export const apiPut = async(endpoint, token, body = {}, options = {}) => {
+export const apiPostFormData = async(BASE_URL, endpoint, token, formData) => {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            // Don't set Content-Type for FormData - browser will set it automatically with boundary
+        },
+        body: formData, // FormData object
+    });
+    if (!response.ok) {
+        let errorMessage = 'Failed to post form data';
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData?.message || errorMessage;
+        } catch (e) {
+        }
+        throw new Error(errorMessage);
+    }
+    
+    const responseData = await response.json();
+    
+    if (responseData?.status === false) {
+        throw new Error('Gagal untuk post form data');
+    }
+    
+    return responseData;
+}
+
+export const apiPut = async(BASE_URL, endpoint, token, body = {}, options = {}) => {
     let url = `${BASE_URL}${endpoint}`;
     if (options.params && typeof options.params === 'object') {
         const query = new URLSearchParams(options.params).toString();
@@ -113,7 +148,31 @@ export const apiPut = async(endpoint, token, body = {}, options = {}) => {
     return responseData;
 }
 
-export const apiDelete = async(endpoint, token, options = {}) => {
+export const apiPatch = async(BASE_URL, endpoint, token, body = {}, options = {}) => {
+    let url = `${BASE_URL}${endpoint}`;
+    if (options.params && typeof options.params === 'object') {
+        const query = new URLSearchParams(options.params).toString();
+        url += `?${query}`;
+    }
+    const response = await fetch(url, {
+        method: 'PATCH',
+        headers: getHeaders(token, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(body),
+    });
+    if (!response.ok) throw new Error('Failed to patch');
+    
+    // Get response data
+    const responseData = await response.json();
+    
+    // Check if response status is false
+    if (responseData?.status === false) {
+        throw new Error('Gagal untuk patch');
+    }
+    
+    return responseData;
+}
+
+export const apiDelete = async(BASE_URL, endpoint, token, options = {}) => {
     let url = `${BASE_URL}${endpoint}`;
     if (options.params && typeof options.params === 'object') {
         const query = new URLSearchParams(options.params).toString();
@@ -307,3 +366,10 @@ export const getImageBase64 = async (imagePath) => {
         return null
     }
 }
+
+export const AnimatedLoadingSpinner = ({text}) => (
+    <div className="d-flex flex-column align-items-center justify-content-center py-5">
+        <div className="loading-spinner mb-3"></div>
+        <p className="text-muted fs-14">Loading {text}...</p>
+    </div>
+);

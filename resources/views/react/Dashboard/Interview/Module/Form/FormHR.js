@@ -3,6 +3,8 @@ import { Form, Button, Row, Col, Container, Accordion, FloatingLabel, Tabs, Tab 
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
+import { apiPost } from '../../../Helper/Helper';
+import { toast } from 'react-toastify';
 
 const POINT_OPTIONS = [
     { value: '', label: 'Select Specific point' },
@@ -13,14 +15,13 @@ const POINT_OPTIONS = [
     { value: '1', label: 'Very Poor' },
 ];
 export const FormHR = ({ 
-    token, 
-    userInfo, 
-    data, 
+    itemSchedule,
+    endpoint,
+    token,
+    loginInfo,
     status = "hr",
-    setTotalPointSIAH,
-    setTotalPointValues,
-    setTotalPointCSE,
-    setTotalPointSDT,
+    onSaveSuccess,
+    system
 }) => {
     const SIAH_ASPECTS = [
         { key: 'sincerity', label: 'Sincerity' },
@@ -88,6 +89,10 @@ export const FormHR = ({
     const totalPointVALUE = getTotalPoint(formValues, VALUE_ASPECTS);
     const totalPointCSE = getTotalPoint(formCSE, CSE_ASPECTS);
     const totalPointSDT = getTotalPoint(formSDT, SDT_ASPECTS);
+
+    console.log({
+        system
+    });
     
     return (
         <Tabs
@@ -101,6 +106,12 @@ export const FormHR = ({
                         setForm={setFormSiah}
                         titleForm={"SIAH"}
                         interview_aspects={SIAH_ASPECTS}
+                        itemSchedule={itemSchedule}
+                        endpoint={endpoint}
+                        token={token}
+                        loginInfo={loginInfo}
+                        onSaveSuccess={onSaveSuccess}
+                        system={system}
                     />
                 </Tab>
             )}
@@ -111,6 +122,12 @@ export const FormHR = ({
                         setForm={setFormValues}
                         titleForm={"7 Values"}
                         interview_aspects={VALUE_ASPECTS}
+                        itemSchedule={itemSchedule}
+                        endpoint={endpoint}
+                        token={token}
+                        loginInfo={loginInfo}
+                        onSaveSuccess={onSaveSuccess}
+                        system={system}
                     />
                 </Tab>
             )}
@@ -120,6 +137,12 @@ export const FormHR = ({
                     setForm={setFormCSE}
                     titleForm={"CSE"}
                     interview_aspects={CSE_ASPECTS}
+                    itemSchedule={itemSchedule}
+                    endpoint={endpoint}
+                    token={token}
+                    loginInfo={loginInfo}
+                    onSaveSuccess={onSaveSuccess}
+                    system={system}
                 />
             </Tab>
             <Tab eventKey="sdt" title="SDT">
@@ -128,6 +151,12 @@ export const FormHR = ({
                     setForm={setFormSDT}
                     titleForm={"SDT"}
                     interview_aspects={SDT_ASPECTS}
+                    itemSchedule={itemSchedule}
+                    endpoint={endpoint}
+                    token={token}
+                    loginInfo={loginInfo}
+                    onSaveSuccess={onSaveSuccess}
+                    system={system}
                 />
             </Tab>
         </Tabs>
@@ -136,9 +165,17 @@ export const FormHR = ({
 const QuestionSIAH = ({ 
     form,
     setForm,
-    titleForm, interview_aspects 
+    titleForm, 
+    interview_aspects,
+    itemSchedule,
+    endpoint,
+    token,
+    loginInfo,
+    onSaveSuccess,
+    system
 }) => {
     const [isSubmit, setIsSubmit] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [activeAccordion, setActiveAccordion] = useState([interview_aspects[0].key]);
 
@@ -163,11 +200,12 @@ const QuestionSIAH = ({
         );
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = {};
         let allFilled = true;
         let errorKeys = [];
+        
         interview_aspects.forEach(aspect => {
             if (!form[aspect.key].question.trim()) {
                 newErrors[aspect.key] = true;
@@ -175,8 +213,8 @@ const QuestionSIAH = ({
                 errorKeys.push(aspect.key);
             }
         });
+        
         setErrors(newErrors);
-        setIsSubmit(allFilled);
 
         // Buka semua accordion yang error
         if (!allFilled) {
@@ -188,12 +226,61 @@ const QuestionSIAH = ({
             }
             return;
         }
-        console.log({
-            form
-        });
-        
-        // Lakukan proses simpan di sini jika semua valid
-        // ...
+
+        try {
+            setIsLoading(true);
+            
+            // Format data sesuai struktur yang diminta
+            const postData = {
+                schedule_interview_id: itemSchedule?.id || itemSchedule?.schedule_interview_id,
+                interviews: [{
+                    company_value: titleForm,
+                    comment: "kosong",
+                    detail_interviews: interview_aspects.map(aspect => ({
+                        aspect: aspect.label,
+                        question: form[aspect.key].question,
+                        answer: form[aspect.key].remark,
+                        score: parseInt(form[aspect.key].point) || 0,
+                    }))
+                }],
+                assigneds: [
+                    {
+                        cum_id: loginInfo?.employee?.id || loginInfo?.id,
+                        assigned_name: loginInfo?.employee?.name || loginInfo?.name || "Unknown",
+                        assigned_email: loginInfo?.employee?.email || loginInfo?.email || "",
+                        assigned_role: system?.roles?.[0]?.role_name || 'role_name',
+                        assigned_role_alias: system?.roles?.[0]?.role_slug || 'role_slug'
+                    }
+                ]
+            };
+            const params = {
+                systemName: "interview",
+                menuName: "interview",
+                permissionName: "create"
+            };
+            const response = await apiPost(
+                endpoint, 
+                '/interview/batch?permissionName=create&menuName=interview&systemName=interview', 
+                token, 
+                postData
+            );
+
+            setIsSubmit(true);
+            toast.success(`${titleForm} form submitted successfully!`);
+            
+            console.log('Form submitted successfully:', response);
+            
+            // Panggil callback untuk menutup offcanvas
+            if (onSaveSuccess) {
+                onSaveSuccess();
+            }
+            
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            toast.error(`Failed to submit ${titleForm} form: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -271,9 +358,17 @@ const QuestionSIAH = ({
                         ))}
                     </Accordion>
                     <div className="mt-4">
-                        <Button type="submit" variant="success">Save {titleForm}</Button>
+                        <Button 
+                            type="submit" 
+                            variant="success" 
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Saving...' : `Save ${titleForm}`}
+                        </Button>
                         {isSubmit && 
-                            <Button type="button" variant="success" className="ms-2">Show Result {titleForm}</Button>
+                            <Button type="button" variant="success" className="ms-2">
+                                Show Result {titleForm}
+                            </Button>
                         }
                     </div>
                 </Form>

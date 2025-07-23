@@ -11,13 +11,18 @@ import { Role as ManageRole } from './Manageuser/Role';
 import { ToastContainer } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { Candidate } from './Interview/Candidate';
-import { ListInterview } from './Interview/ListInterview';
 import { ListPaySlip } from './Payslip/ListPaySlip';
 import { ListPaySlipTKA } from './Payslip/ListPaySlipTKA';
 
 const Index = (props) => {
     const { access_token, userInfo, system_access } = props;
     const [page, setPage] = useState('Dashboard');
+    
+    // CUM Endpoint
+    const BASE_URL = process.env.REACT_APP_ENDPOINT_APP;
+
+    // INTERVIE Endpoint
+    const BASE_URL_INT = process.env.REACT_APP_ENDPOINT_APP_INTERVIEW;
     return (
         <Container fluid>
             <Row>
@@ -48,6 +53,7 @@ const Index = (props) => {
                                         token={access_token}
                                         setPage={setPage} 
                                         userInfo={userInfo}
+                                        endpoint={BASE_URL}
                                     />
                                 } 
                             />
@@ -58,6 +64,7 @@ const Index = (props) => {
                                         token={access_token}
                                         setPage={setPage} 
                                         userInfo={userInfo}
+                                        endpoint={BASE_URL}
                                     />
                                 } 
                             />
@@ -68,6 +75,7 @@ const Index = (props) => {
                                         token={access_token}
                                         setPage={setPage} 
                                         userInfo={userInfo}
+                                        endpoint={BASE_URL}
                                     />
                                 } 
                             />
@@ -78,6 +86,7 @@ const Index = (props) => {
                                         token={access_token}
                                         setPage={setPage} 
                                         userInfo={userInfo}
+                                        endpoint={BASE_URL}
                                     />
                                 } 
                             />
@@ -89,28 +98,7 @@ const Index = (props) => {
                                         token={access_token}
                                         setPage={setPage} 
                                         loginInfo={userInfo}
-                                    />
-                                } 
-                            />
-                            <Route 
-                                path={`/interview/interview`}
-                                element={
-                                    <ListInterview
-                                        systems={system_access || []}
-                                        token={access_token}
-                                        setPage={setPage} 
-                                        userInfo={userInfo}
-                                    />
-                                } 
-                            />
-                            <Route 
-                                path={`/interview/interview`}
-                                element={
-                                    <ListInterview
-                                        systems={system_access || []}
-                                        token={access_token}
-                                        setPage={setPage} 
-                                        userInfo={userInfo}
+                                        endpoint={BASE_URL_INT}
                                     />
                                 } 
                             />

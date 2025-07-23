@@ -7,7 +7,7 @@ import { Popup } from '../Component/Popup';
 import { toast } from 'react-toastify';
 import { ErrorTemplate } from '../Component/ErrorTemplate';
 
-export const System = ({ token, setPage }) => {
+export const System = ({ endpoint, token, setPage }) => {
 
     const [dataSystem, setDataSystem] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -23,7 +23,7 @@ export const System = ({ token, setPage }) => {
     const fetchSystems = () => {
         setLoading(true);
         setErrors(false);
-        apiGet('/system', token)
+        apiGet(endpoint, '/system', token)
             .then(data => {
                 setLoading(false);
                 setDataSystem(data?.data || []);
@@ -116,14 +116,14 @@ export const System = ({ token, setPage }) => {
     const handleConfirmDelete = async () => {
         if (!systemToDelete) return;
         try {
-            await apiDelete(`/system/${systemToDelete}`, token);
+            await apiDelete(endpoint, `/system/${systemToDelete}`, token);
             toast.success('System berhasil dihapus!', {
                 position: "top-right",
                 autoClose: 3000
             });
             setShowDeletePopup(false);
             setSystemToDelete(null);// Refresh data system
-                apiGet('/system', token)
+                apiGet(endpoint, '/system', token)
                     .then(data => setDataSystem(data?.data || []))
                     .catch(err => {
                         console.error('Failed to refresh:', err);
@@ -180,14 +180,14 @@ export const System = ({ token, setPage }) => {
             try {
                 if (isEdit && editSystemId) {
                     // Edit system
-                    await apiPut(`/system/${editSystemId}`, token, dataToSend);
+                    await apiPut(endpoint, `/system/${editSystemId}`, token, dataToSend);
                     toast.success('System berhasil diupdate!', {
                         position: "top-right",
                         autoClose: 3000
                     });
                 } else {
                     // Add system
-                    await apiPost('/system', token, dataToSend);
+                    await apiPost(endpoint, '/system', token, dataToSend);
                     toast.success('System berhasil ditambahkan!', {
                         position: "top-right",
                         autoClose: 3000
@@ -196,7 +196,7 @@ export const System = ({ token, setPage }) => {
                 setShowAddSystem(false);
                 setIsEdit(false);
                 setEditSystemId(null);
-                apiGet('/system', token)
+                apiGet(endpoint, '/system', token)
                     .then(data => setDataSystem(data?.data || []))
                     .catch(err => {
                         console.error('Failed to refresh system after update:', err);

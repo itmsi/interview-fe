@@ -1,38 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, FloatingLabel } from 'react-bootstrap';
 import { GrAttachment } from "react-icons/gr";
 import DatePicker from "react-datepicker";
-import { addDays } from 'date-fns';
 import "react-datepicker/dist/react-datepicker.css";
 import styled from 'styled-components';
+import { apiPost, apiPatch } from '../Helper/Helper';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import dayjs from 'dayjs';
 
-export const CreateCandidateForm = ({ onSave, onCancel }) => {
+export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initialData }) => {
     const [validated, setValidated] = useState(false);
+    const isEdit = !!initialData; // Menentukan apakah mode edit atau add
 
     const [fileNamePhoto, setFileNamePhoto] = useState('');
     const [fileNameCV, setFileNameCV] = useState('');
     const [form, setForm] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        position: '',
-        company: '',
-        nationality: '',
-        gender: '',
-        religion: '',
-        date_of_birth: '',
-        age: '',
-        marital_status: '',
-        address: '',
-        city: '',
-        state: '',
-        country: '',
-        status: 'New',
-        image: null,
-        resume: null
+        candidate_name: '',
+        candidate_email: '',
+        candidate_phone: '',
+        candidate_position: '',
+        candidate_company: '',
+        candidate_nationality: '',
+        candidate_gender: '',
+        candidate_religion: '',
+        candidate_date_birth: null,
+        candidate_age: '',
+        candidate_marital_status: '',
+        candidate_address: '',
+        candidate_city: '',
+        candidate_state: '',
+        candidate_country: '',
+        candidate_foto: null,
+        candidate_resume: null
     });
 
-    const MAX_IMAGE_SIZE = 1024 * 1024;
+    useEffect(() => {
+        if (initialData) {
+            setForm(prev => ({
+                ...prev,
+                candidate_name: initialData.name || '',
+                candidate_email: initialData.email || '',
+                candidate_phone: initialData?.personal_information?.[0]?.candidate_phone ? initialData.personal_information[0].candidate_phone : '',
+                candidate_position: initialData.position || '',
+                candidate_company: initialData.company || '',
+                candidate_nationality: initialData?.personal_information?.[0]?.candidate_nationality ? initialData.personal_information[0].candidate_nationality : '',
+                candidate_gender: initialData?.personal_information?.[0]?.candidate_gender ? initialData.personal_information[0].candidate_gender : '',
+                candidate_religion: initialData?.personal_information?.[0]?.candidate_religion ? initialData.personal_information[0].candidate_religion : '',
+                candidate_date_birth: initialData?.personal_information?.[0]?.candidate_date_birth ? new Date(initialData.personal_information[0].candidate_date_birth) : null,
+                candidate_age: initialData.age || '',
+                candidate_marital_status: initialData?.personal_information?.[0]?.candidate_marital_status ? initialData.personal_information[0].candidate_marital_status : '',
+                candidate_address: initialData?.address_information?.[0]?.candidate_address ? initialData.address_information[0].candidate_address : '',
+                candidate_city: initialData?.address_information?.[0]?.candidate_city ? initialData.address_information[0].candidate_city : '',
+                candidate_state: initialData?.address_information?.[0]?.candidate_state ? initialData.address_information[0].candidate_state : '',
+                candidate_country: initialData?.address_information?.[0]?.candidate_country ? initialData.address_information[0].candidate_country : '',
+                candidate_foto: initialData.image || null,
+                candidate_resume: initialData.resume || null
+            }));
+            
+            // Set file name jika ada file
+            if (initialData.image) {
+                setFileNamePhoto(typeof initialData.image === 'string' ? 'Current Photo' : initialData.image.name);
+            }
+            if (initialData.resume) {
+                setFileNameCV(typeof initialData.resume === 'string' ? 'Current Resume' : initialData.resume.name);
+            }
+        }
+    }, [initialData]);
+
+    const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
     const MAX_PDF_SIZE = 2 * 1024 * 1024;
 
     const handleChange = (e) => {
@@ -46,40 +82,35 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
 
         if (!file) return;
 
-        if (name === "image") {
+        if (name === "candidate_foto") {
             if (!file.type.startsWith("image/")) {
-                alert("File must be an image");
+                toast.error("File must be an image");
                 return;
             }
             if (file.size > MAX_IMAGE_SIZE) {
-                alert("Image size must be under 1MB");
+                toast.error("Image size must be under 2MB");
                 return;
             }
-            if (file) {
-                setFileNamePhoto(file.name);
-            }
+            setFileNamePhoto(file.name);
         }
 
-        if (name === "resume") {
+        if (name === "candidate_resume") {
             if (file.type !== "application/pdf") {
-                alert("Resume must be a PDF file");
+                toast.error("Resume must be a PDF file");
                 return;
             }
             if (file.size > MAX_PDF_SIZE) {
-                alert("Resume size must be under 2MB");
+                toast.error("Resume size must be under 2MB");
                 return;
             }
-            if (file) {
-                setFileNameCV(file.name);
-            }
+            setFileNameCV(file.name);
         }
 
         setForm(prev => ({ ...prev, [name]: file }));
     };
 
-
-    const handleSubmit = (e) => {
-        const formEl = e.currentTarget;
+    const handleSubmit = async (e) => {
+        const formEl = e.currentTarget;   
         e.preventDefault();
 
         if (formEl.checkValidity() === false) {
@@ -88,31 +119,55 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
             return;
         }
 
-        const formData = new FormData();
-        for (const key in form) {
-            const value = form[key];
-            if (Array.isArray(value)) {
-                formData.append(key, JSON.stringify(value));
-            } else {
-                formData.append(key, value);
-            }
+        // Persiapkan data untuk dikirim
+        const submitData = { ...form };
+
+        // Jika ada file yang di-upload, gunakan FormData
+        const hasFile = form.candidate_foto instanceof File || form.candidate_resume instanceof File;
+        
+        let dataToSend = submitData;
+        if (hasFile) {
+            const formData = new FormData();
+            Object.keys(submitData).forEach(key => {
+                const value = submitData[key];
+                if (value !== null && value !== undefined) {
+                    formData.append(key, value);
+                }
+            });
+            dataToSend = formData;
         }
 
-        onSave(formData);
+        try {
+            let response;
+            if (isEdit) {
+                console.log({
+                    submitData: dataToSend
+                });
+                
+                response = await apiPatch(endpoint, `/candidates/${initialData.id}`, token, dataToSend);
+                toast.success('Candidate updated successfully!');
+            } else {
+                response = await apiPost(endpoint, '/candidates', token, dataToSend);
+                toast.success('Candidate created successfully!');
+            }
+            onSave(response.data);
+        } catch (error) {
+            toast.error(`Failed to ${isEdit ? 'update' : 'create'} candidate: ` + error.message);
+        }
     };
 
     return (
-        <StyleForm noValidate validated={validated} onSubmit={handleSubmit} className="p-3 border bg-light rounded">
-            <h5 className="mb-4">Create New Candidate</h5>
+        <StyleForm noValidate validated={validated} onSubmit={handleSubmit} className={`${!isEdit ? 'p-3 border bg-light rounded' : ''}`}>
+            {!isEdit && <h5 className="mb-4">Create New Candidate</h5>}
             <Row className="g-3">
 
                 <Col md={6}>
                     <FloatingLabel controlId="inputName" label="Name">
                         <Form.Control 
-                            name="name"
+                            name="candidate_name"
                             type="text" 
                             placeholder="Enter your full name"
-                            value={form.name}
+                            value={form.candidate_name}
                             onChange={handleChange} 
                             required
                         />
@@ -123,12 +178,12 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel controlId="inputEmail" label="Email">
                         <Form.Control 
-                            name="email"
+                            name="candidate_email"
                             type="email"
                             placeholder="" 
-                            value={form.email}
+                            value={form.candidate_email}
                             onChange={handleChange}
-                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                            pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"
                             required
                         />
                         <Form.Control.Feedback type="invalid">Valid email is required.</Form.Control.Feedback>
@@ -138,15 +193,15 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="Phone Number">
                         <Form.Control 
-                            name="phone" 
-                            value={form.phone}
+                            name="candidate_phone" 
+                            value={form.candidate_phone}
                             placeholder="Enter your phone number"
                             pattern="^08[0-9]{8,11}$"
                             onChange={(e) => {
                                 const value = e.target.value.replace(/[^\d]/g, '');
                                 setForm(prev => ({
                                     ...prev,
-                                    phone: value
+                                    candidate_phone: value // perbaikan di sini
                                 }));
                             }}
                             maxLength={13}
@@ -166,8 +221,8 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="Religion">
                         <Form.Control 
-                            name="religion" 
-                            value={form.religion} 
+                            name="candidate_religion" 
+                            value={form.candidate_religion} 
                             onChange={handleChange} 
                             placeholder="Enter your religion"
                         />
@@ -177,8 +232,8 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="Company">
                         <Form.Control 
-                            name="company" 
-                            value={form.company}
+                            name="candidate_company" 
+                            value={form.candidate_company}
                             onChange={handleChange}
                             placeholder="Enter your company name"
                             required
@@ -190,10 +245,10 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="Position">
                         <Form.Control 
-                            name="position" 
-                            value={form.position}
+                            name="candidate_position" 
+                            value={form.candidate_position}
                             onChange={handleChange}
-                            placeholder="Enter your phone number"
+                            placeholder="Enter your position"
                             required
                         />
                         <Form.Control.Feedback type="invalid">Position is required.</Form.Control.Feedback>
@@ -202,7 +257,7 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
 
                 <Col md={6}>
                     <FloatingLabel label="Gender">
-                        <Form.Select name="gender" value={form.gender} onChange={handleChange}>
+                        <Form.Select name="candidate_gender" value={form.candidate_gender} onChange={handleChange}>
                             <option value="">-- Choose --</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -213,7 +268,7 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
 
                 <Col md={6}>
                     <FloatingLabel label="Marital Status">
-                        <Form.Select name="marital_status" value={form.marital_status} onChange={handleChange}>
+                        <Form.Select name="candidate_marital_status" value={form.candidate_marital_status} onChange={handleChange}>
                             <option value="">-- Choose --</option>
                             <option value="Single">Single</option>
                             <option value="Married">Married</option>
@@ -225,8 +280,8 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="Age">
                         <Form.Control 
-                            name="age" 
-                            value={form.age}
+                            name="candidate_age" 
+                            value={form.candidate_age}
                             onChange={handleChange}
                             placeholder="Enter your age"
                             required
@@ -242,13 +297,18 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                     >
                         <Form.Label className='m-0 fs-14 color-label col ps-2'>Date of Birth</Form.Label>
                         <DatePicker
-                            selected={form.date_of_birth}
-                            onChange={(date) => setForm({ ...form, date_of_birth: date })}
+                            selected={form.candidate_date_birth}
+                            onChange={(date) => setForm({ ...form, candidate_date_birth: dayjs(date).format('YYYY-MM-DD') })}
                             dateFormat="dd MMM yyyy"
-                            className="form-control h-field"
-                            maxDate={addDays(new Date())}
+                            className="form-control h-field height-date"
                             placeholderText="Select Date of Birth"
                             wrapperClassName="col-lg-8 col-12"
+                            showMonthDropdown
+                            showYearDropdown
+                            yearDropdownItemNumber={55}
+                            maxDate={new Date(2015, 11, 31)}
+                            minDate={new Date(new Date().getFullYear() - 50, 0, 1)}
+                            scrollableYearDropdown
                         />
                         <Form.Control.Feedback type="invalid">Date of Birth is required.</Form.Control.Feedback>
                     </Form.Group>
@@ -257,8 +317,8 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="Nationality">
                         <Form.Control 
-                            name="nationality" 
-                            value={form.nationality} 
+                            name="candidate_nationality" 
+                            value={form.candidate_nationality} 
                             onChange={handleChange} 
                             placeholder="Enter your Nationality"
                         />
@@ -269,8 +329,8 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="City">
                         <Form.Control 
-                            name="city" 
-                            value={form.city} 
+                            name="candidate_city" 
+                            value={form.candidate_city} 
                             onChange={handleChange} 
                             placeholder="Enter your City"
                         />
@@ -281,8 +341,8 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="State">
                         <Form.Control 
-                            name="state" 
-                            value={form.state} 
+                            name="candidate_state" 
+                            value={form.candidate_state} 
                             onChange={handleChange} 
                             placeholder="Enter your State"
                         />
@@ -293,8 +353,8 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                 <Col md={6}>
                     <FloatingLabel label="Country">
                         <Form.Control 
-                            name="country" 
-                            value={form.country} 
+                            name="candidate_country" 
+                            value={form.candidate_country} 
                             onChange={handleChange} 
                             placeholder="Enter your Country"
                         />
@@ -306,9 +366,9 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                     <FloatingLabel label="Address">
                         <Form.Control 
                             as="textarea"
-                            name="address" 
-                            value={form.address} 
-                            onChange={handleChange} 
+                            name="candidate_address"
+                            value={form.candidate_address}
+                            onChange={handleChange}
                             placeholder="Enter your Address"
                         />
                         <Form.Control.Feedback type="invalid">Address is required.</Form.Control.Feedback>
@@ -324,7 +384,7 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                         <Form.Control 
                             type="file"
                             accept="image/*"
-                            name="image"
+                            name="candidate_foto"
                             onChange={handleFileChange} 
                             hidden
                         />
@@ -346,7 +406,7 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                         </Form.Label>
                         <Form.Control
                             type="file"
-                            name="resume"
+                            name="candidate_resume"
                             accept=".pdf"
                             onChange={handleFileChange}
                             hidden
@@ -360,9 +420,22 @@ export const CreateCandidateForm = ({ onSave, onCancel }) => {
                     </Form.Group>
                 </Col>
 
-                <Col xs={12} className="d-flex gap-2 mt-3">
-                    <Button type="submit" variant="success">Save</Button>
-                    <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+                <Col xs={12} className="d-flex gap-2 mt-3 button-form-footer-actions">
+                    <Button 
+                        variant="outline-secondary" 
+                        className='btn-hide' 
+                        onClick={onCancel} 
+                        style={{ minWidth: "100px" }}
+                        type="button"
+                    >Cancel</Button>
+                    <Button 
+                        type="submit" 
+                        variant="primary"
+                        className='btn-action' 
+                        style={{ minWidth: "100px" }}
+                    >
+                        {isEdit ? 'Update' : 'Save'}
+                    </Button>
                 </Col>
             </Row>
         </StyleForm>

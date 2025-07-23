@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import { ErrorTemplate } from '../Component/ErrorTemplate';
 import Select from 'react-select';
 
-export const Role = ({ token, setPage }) => {
+export const Role = ({ endpoint, token, setPage }) => {
     const [dataRole, setDataRole] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState(false);
@@ -23,7 +23,7 @@ export const Role = ({ token, setPage }) => {
     const fetchRoles = () => {
         setLoading(true);
         setErrors(false);
-        apiGet('/roles', token)
+        apiGet(endpoint, '/roles', token)
             .then(data => {
                 setLoading(false);
                 setDataRole(data?.data || []);
@@ -132,7 +132,7 @@ export const Role = ({ token, setPage }) => {
         if (showAddRole) {
             if (addSystemOptions.length === 0) {
                 setLoadingAddSystem(true);
-                apiGet('/system', token)
+                apiGet(endpoint, '/system', token)
                     .then(res => {
                         const options = (res.data || []).map(sys => ({
                             value: sys.system_id,
@@ -157,14 +157,14 @@ export const Role = ({ token, setPage }) => {
     const handleConfirmDelete = async () => {
         if (!roleToDelete) return;
         try {
-            await apiDelete(`/roles/${roleToDelete}`, token);
+            await apiDelete(endpoint, `/roles/${roleToDelete}`, token);
             toast.success('Role berhasil dihapus!', {
                 position: "top-right",
                 autoClose: 3000
             });
             setShowDeletePopup(false);
             setRoleToDelete(null);// Refresh data role
-            apiGet('/roles', token)
+            apiGet(endpoint, '/roles', token)
                 .then(data => setDataRole(data?.data || []))
                 .catch(err => {
                     console.error('Failed to refresh:', err);
@@ -226,14 +226,14 @@ export const Role = ({ token, setPage }) => {
             try {
                 if (isEdit && editRoleId) {
                     // Edit role
-                    await apiPut(`/roles/${editRoleId}`, token, dataToAdd);
+                    await apiPut(endpoint, `/roles/${editRoleId}`, token, dataToAdd);
                     toast.success('Role berhasil diupdate!', {
                         position: "top-right",
                         autoClose: 3000
                     });
                 } else {
                     // Add role
-                    await apiPost('/roles', token, dataToAdd);
+                    await apiPost(endpoint, '/roles', token, dataToAdd);
                     toast.success('Role berhasil ditambahkan!', {
                         position: "top-right",
                         autoClose: 3000
@@ -242,7 +242,7 @@ export const Role = ({ token, setPage }) => {
                 setShowAddRole(false);
                 setIsEdit(false);
                 setEditRoleId(null);
-                apiGet('/roles', token)
+                apiGet(endpoint, '/roles', token)
                     .then(data => setDataRole(data?.data || []))
                     .catch(err => {
                         console.error('Failed to refresh roles after update:', err);
@@ -288,7 +288,7 @@ export const Role = ({ token, setPage }) => {
         setLoadingMenus(true);
         
         try {
-            const permissionResponse = await apiGet(`/role-has-permission?role_id=${roleId}`, token);
+            const permissionResponse = await apiGet(endpoint, `/role-has-permission?role_id=${roleId}`, token);
             const allPermissions = permissionResponse?.data || [];
             
             const rolePermissions = allPermissions;
@@ -348,7 +348,7 @@ export const Role = ({ token, setPage }) => {
     
     const handlePermissionChange = async (menuId, permissionType, isChecked) => {
         try {
-            const endpoint = `/role-has-permission`;
+            const endpointparams = `/role-has-permission`;
             
             const permissionId = permissionIds[menuId]?.[permissionType] || null;
             
@@ -360,9 +360,9 @@ export const Role = ({ token, setPage }) => {
             };
             
             if (isChecked) {
-                await apiPost(endpoint, token, data);
+                await apiPost(endpoint, endpointparams, token, data);
             } else {
-                await apiPost(endpoint, token, data);
+                await apiPost(endpoint, endpointparams, token, data);
             }
             
             // Update local state

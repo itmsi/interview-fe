@@ -1,29 +1,77 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Col, Container, Row, Badge, Offcanvas, Tabs, Tab, Form } from 'react-bootstrap';
+import { Card, Col, Container, Row, Badge, Offcanvas, Tabs, Tab, Form, Modal, Button } from 'react-bootstrap';
 import styled from 'styled-components';
 import { VscDebugBreakpointData } from "react-icons/vsc";
 import { RiUserAddFill } from "react-icons/ri";
-import { getBadgeVariant, ImageProfileSrc, useSystemFromUrl } from '../Helper/Helper';
+import { AnimatedLoadingSpinner, apiDelete, apiGet, getBadgeVariant, ImageProfileSrc, Tooltips, useSystemFromUrl } from '../Helper/Helper';
 import { CreateCandidateForm } from './CreateCandidateForm';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Profile } from './Module/Profile';
 import { Assigned } from './Module/Assigned';
 import { DateInterview } from './Module/DateInterviews';
 import { FormInterview } from './Module/FormInterview';
+import { BackgroundCheck } from './Module/BackgroundCheck';
+import { DocumentOnBoarding } from './Module/DocumentOnBoarding';
 import { DataKandidat } from './data/candidateData';
-import CandidateNotes from './CandidateNotes';
+import CandidateNotes from './Module/CandidateNotes';
+import { ServerErrorTemplate } from '../Component/ErrorTemplate';
+import { FaPencil, FaTrash } from "react-icons/fa6";
+import { toast } from 'react-toastify';
 
-export const Candidate = ({ systems, token, setPage, loginInfo }) => {
+const CandidateCardSkeleton = () => (
+    <div className="candidate-skeleton">
+        <div className="skeleton-header">
+            <div className="skeleton-avatar"></div>
+            <div className="skeleton-text-block">
+                <div className="skeleton-text skeleton-title"></div>
+                <div className="skeleton-text skeleton-subtitle"></div>
+            </div>
+        </div>
+        <div className="skeleton-body">
+            {[1, 2, 3, 4, 5].map((item) => (
+                <div key={item} className="skeleton-list-item">
+                    <div className="skeleton-text skeleton-label"></div>
+                    <div className="skeleton-text skeleton-value"></div>
+                </div>
+            ))}
+        </div>
+    </div>
+);
 
+const LoadingCandidates = () => (
+    <div>
+        <AnimatedLoadingSpinner text={'candidates'} />
+        <Row className='g-3'>
+            {[1, 2, 3, 4].map((index) => (
+                <Col md={4} lg={3} sm={6} key={index}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1, duration: 0.4 }}
+                    >
+                        <CandidateCardSkeleton />
+                    </motion.div>
+                </Col>
+            ))}
+        </Row>
+    </div>
+);
+
+export const Candidate = ({ endpoint, systems, token, setPage, loginInfo }) => {
+    const [errors, setErrors] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [users, setUsers] = useState([]);
     const [isAdd, setIsAdd] = useState(false);
-    const [candidates, setCandidates] = useState(DataKandidat);
+    const [candidates, setCandidates] = useState([]);
+    const [showEdit, setShowEdit] = useState(false);
+    const [editCandidate, setEditCandidate] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteCandidate, setDeleteCandidate] = useState(null);
+    const [selectedCandidate, setSelectedCandidate] = useState(null);
+    const [showProfile, setShowProfile] = useState(false);
     
-    // Handler untuk update notes kandidat
     const handleUpdateCandidateNotes = async (candidateId, newNotes) => {
         try {
-            console.log('Updating notes for candidate:', candidateId);
-            console.log('New notes:', newNotes);
-            // Update state candidates dengan notes baru
             setCandidates(prevCandidates => 
                 prevCandidates.map(candidate => 
                     candidate.id === candidateId 
@@ -31,24 +79,42 @@ export const Candidate = ({ systems, token, setPage, loginInfo }) => {
                         : candidate
                 )
             );
-            
-            // Di implementasi nyata, lakukan API call ke backend
-            // Simulasi API call success
             return true;
         } catch (error) {
             console.error('Error updating candidate notes:', error);
             return false;
         }
     };
+
+    const handleRetry = () => {
+        setLoading(true);
+        setErrors(false);
+        apiGet(endpoint, '/dashboard/candidates', token)
+            .then(data => {
+                setLoading(false);
+                setErrors(false);
+                setUsers(data?.data || []);
+            })
+            .catch(err => {
+                console.error('Error fetching candidates:', err);
+                setErrors(true);
+                setLoading(false);
+            });
+    };
     
     useEffect(() => {
         setPage('Candidates');
-        // apiGet('/users', token)
-        //     .then(data => {
-        //         setLoading(false);
-        //         setUsers(data?.data?.data || [])
-        //     })
-        //     .catch(err => console.error(err));
+        apiGet(endpoint, '/dashboard/candidates', token)
+            .then(data => {
+                setLoading(false);
+                setErrors(false);
+                setCandidates(data?.data || []);
+            })
+            .catch(err => {
+                console.error('Error fetching candidates:', err);
+                setErrors(true);
+                setLoading(false);
+            });
     }, [token]);
 
     const formVariants = {
@@ -57,9 +123,47 @@ export const Candidate = ({ systems, token, setPage, loginInfo }) => {
         exit: { opacity: 0, y: -20 }
     };
 
-    // GET ACCESS THIS SYSTEM (ROLE)
     const system = useSystemFromUrl(systems);
     
+    const handleEditProfile = (candidate) => {
+        setEditCandidate(candidate);
+        setShowEdit(true);
+    };
+
+    const handleSaveEdit = (updatedCandidate) => {
+        apiGet(endpoint, '/dashboard/candidates', token)
+            .then(data => {
+                setCandidates(data?.data || []);
+                setShowEdit(false);
+                setEditCandidate(null);
+            })
+            .catch(err => {
+                console.error('Error fetching updated candidates:', err);
+                setShowEdit(false);
+                setEditCandidate(null);
+            });
+    };
+
+    const handleDeleteProfile = (candidate) => {
+        setDeleteCandidate(candidate);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await apiDelete(endpoint, `/candidates/${deleteCandidate.id}`, token);
+    
+            const data = await apiGet(endpoint, '/dashboard/candidates', token);
+            setCandidates(data?.data || []);
+            toast.success('Candidate deleted successfully!');
+            setShowDeleteConfirm(false);
+            setDeleteCandidate(null);
+            setShowProfile(false);
+        } catch (error) {
+            toast.error('Failed to delete candidate: ' + error.message);
+        }
+    };
+
     return (
         <Container fluid className="my-4 p-0 position-relative">
             <AnimatePresence mode="wait">
@@ -73,9 +177,18 @@ export const Candidate = ({ systems, token, setPage, loginInfo }) => {
                     transition={{ duration: 0.4 }}
                 >
                     <CreateCandidateForm
+                        endpoint={endpoint}
+                        token={token}
                         onSave={(newCandidate) => {
-                            setCandidates(prev => [...prev, newCandidate]);
-                            setIsAdd(false);
+                            apiGet(endpoint, '/dashboard/candidates', token)
+                                .then(data => {
+                                    setCandidates(data?.data || []);
+                                    setIsAdd(false);
+                                })
+                                .catch(err => {
+                                    console.error('Error fetching updated candidates:', err);
+                                    setIsAdd(false);
+                                });
                         }}
                         onCancel={() => setIsAdd(false)}
                     />
@@ -89,17 +202,72 @@ export const Candidate = ({ systems, token, setPage, loginInfo }) => {
                     variants={formVariants}
                     transition={{ duration: 0.4 }}
                 >
-                    <LayoutCandidat 
-                        token={token} 
-                        system={system} 
-                        loginInfo={loginInfo} 
-                        candidates={candidates} 
-                        setIsAdd={setIsAdd} 
-                        onUpdateNotes={handleUpdateCandidateNotes}
-                    />
+                    {!errors ? (
+                        loading ? (
+                            <LoadingCandidates />
+                        ) : (
+                            <LayoutCandidat 
+                                token={token} 
+                                system={system} 
+                                loginInfo={loginInfo} 
+                                candidates={candidates} 
+                                setIsAdd={setIsAdd} 
+                                onUpdateNotes={handleUpdateCandidateNotes}
+                                handleEditProfile={handleEditProfile}
+                                handleDeleteProfile={handleDeleteProfile}
+                                selectedCandidate={selectedCandidate}
+                                setSelectedCandidate={setSelectedCandidate}
+                                showProfile={showProfile}
+                                setShowProfile={setShowProfile}
+                                endpoint={endpoint}
+                            />
+                        )
+                    ) : (
+                        <ServerErrorTemplate
+                            onRetry={handleRetry} 
+                            loading={loading}
+                        />
+                    )}
                 </motion.div>
             )}
             </AnimatePresence>
+
+            {/* Modal Edit Profile */}
+            <Modal show={showEdit} onHide={() => setShowEdit(false)} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Candidate Profile</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className='pb-0'>
+                    {editCandidate && (
+                        <CreateCandidateForm
+                            endpoint={endpoint}
+                            token={token}
+                            initialData={editCandidate}
+                            onSave={handleSaveEdit}
+                            onCancel={() => setShowEdit(false)}
+                        />
+                    )}
+                </Modal.Body>
+            </Modal>
+
+            {/* Modal Delete Confirmation */}
+            <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Delete Candidate</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Are you sure you want to delete candidate <strong>{deleteCandidate?.name}</strong>?</p>
+                    <p className="text-muted">This action cannot be undone.</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleConfirmDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Container>
     )
 }
@@ -110,11 +278,15 @@ const LayoutCandidat = ({
     loginInfo,
     candidates,
     setIsAdd,
-    onUpdateNotes
+    onUpdateNotes,
+    handleEditProfile,
+    handleDeleteProfile,
+    selectedCandidate,
+    setSelectedCandidate,
+    showProfile,
+    setShowProfile,
+    endpoint
 }) => {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-
     const [filters, setFilters] = useState({
         text: '',
         status: '',
@@ -122,16 +294,16 @@ const LayoutCandidat = ({
         sort: 'latest'
     });
 
-    const [selectedCandidate, setSelectedCandidate] = useState(null);
-    const [showProfile, setShowProfile] = useState(false);
     const handleShowProfile = (candidate) => {
         setSelectedCandidate(candidate);
         setShowProfile(true);
     };
+    
     const handleCloseProfile = () => {
         setShowProfile(false);
         setSelectedCandidate(null);
     };
+
     return(
         <>
             <div className="d-flex justify-content-end align-items-center mb-3 action-create-candidate">
@@ -155,7 +327,7 @@ const LayoutCandidat = ({
                         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                     >
                         <option value="">All Status</option>
-                        {['Interviewed', 'Scheduled', 'Complete'].map(status => (
+                        {['Interviewed', 'Scheduled', 'Complete', 'New'].map(status => (
                             <option key={status} value={status}>{status}</option>
                         ))}
                     </Form.Select>
@@ -201,7 +373,7 @@ const LayoutCandidat = ({
                     return filters.sort === 'latest' ? dB - dA : dA - dB;
                 })
                 .map((candidate, index) => (
-                <Col md={4} lg={3} sm={6} key={candidate.id}>
+                <Col md={4} lg={3} sm={6} key={index}>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -210,7 +382,17 @@ const LayoutCandidat = ({
                     <StyleListCandidate>
                         <Card.Body>
                             <div className='header-candidate d-flex'>
-                                <img src={candidate.image} width={50} height={50} alt={candidate.name} />
+                                {candidate?.image ? 
+                                    <ImageProfileSrc
+                                        src={candidate.image} 
+                                        alt={candidate.name} 
+                                        width={50} 
+                                        className='avatar me-2' />
+                                : 
+                                    <div className='avatar-user'>
+                                        {candidate?.name?.charAt(0) || '-'}
+                                    </div>
+                                }
                                 <div className='title-name ms-2'>
                                     <h3 
                                         className='title h6 m-0 cursor-pointer'
@@ -272,6 +454,31 @@ const LayoutCandidat = ({
                         />
                         {selectedCandidate?.name || "-"}
                         <Badge bg={'primary'}>{selectedCandidate && selectedCandidate.id_candidate}</Badge>
+                        
+                        {/* Button Actions */}
+                        <div className="ms-3 d-flex gap-2">
+                            <Tooltips title={"Edit Candidate"} position="top">
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    className="rounded-circle"
+                                    onClick={() => handleEditProfile(selectedCandidate)}
+                                >
+                                    <FaPencil />
+                                </Button>
+                            </Tooltips>
+                            
+                            <Tooltips title={"Delete Candidate"} position="top">
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    className="rounded-circle"
+                                    onClick={() => handleDeleteProfile(selectedCandidate)}
+                                >
+                                    <FaTrash />
+                                </Button>
+                            </Tooltips>
+                        </div>
                     </Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
@@ -282,6 +489,7 @@ const LayoutCandidat = ({
                         loginInfo={loginInfo}
                         data={selectedCandidate}
                         onUpdateNotes={onUpdateNotes}
+                        endpoint={endpoint}
                     />
                 </Offcanvas.Body>
             </StyleCanvas>
@@ -348,11 +556,18 @@ const TabCanvas = ({
     system,
     loginInfo,
     data,
-    onUpdateNotes
+    onUpdateNotes,
+    endpoint
 }) =>  {
+    const [activeTab, setActiveTab] = useState("profile");
+
+    const handleTabSelect = async (eventKey) => {
+        setActiveTab(eventKey);
+    };
     return(
         <Tabs
-            defaultActiveKey="profile"
+            activeKey={activeTab}
+            onSelect={handleTabSelect}
             className="mt-3"
         >
             <Tab eventKey="profile" title="Profile">
@@ -362,36 +577,63 @@ const TabCanvas = ({
                     loginInfo={loginInfo}
                 />
             </Tab>
-            <Tab eventKey="hiringpipline" title="Assigned">
+            {/* <Tab eventKey="hiringpipline" title="Assigned">
                 <Assigned
                     data={data}
                     token={token}
                     loginInfo={loginInfo}
                 />
+            </Tab> */}
+            <Tab eventKey="history" title="Date Interview">
+                <DateInterview 
+                    endpoint={endpoint}
+                    token={token}
+                    loginInfo={loginInfo}
+                    infoCandidate={data}
+                    system={system}
+                    isActive={activeTab === "history"}
+                />
+            </Tab>
+            {/* <Tab eventKey="forminterview" title="Form Interview">
+                <FormInterview 
+                    endpoint={endpoint}
+                    data={data}
+                    token={token}
+                    system={system}
+                    loginInfo={loginInfo}
+                />
+            </Tab> */}
+            <Tab eventKey="backgroundCheck" title="Background Check">
+                <BackgroundCheck
+                    endpoint={endpoint}
+                    system={system}
+                    token={token}
+                    infoCandidate={data}
+                    loginInfo={loginInfo}
+                    isActive={activeTab === "backgroundCheck"}
+                />
+            </Tab>
+            <Tab eventKey="documentOnBoarding" title="Document Onboarding">
+                <DocumentOnBoarding
+                    endpoint={endpoint}
+                    system={system}
+                    token={token}
+                    infoCandidate={data}
+                    loginInfo={loginInfo}
+                    isActive={activeTab === "documentOnBoarding"}
+                />
             </Tab>
             <Tab eventKey="notes" title="Notes">
                 <CandidateNotes
+                    endpoint={endpoint}
+                    system={system}
                     candidateId={data?.id}
                     candidateNotes={data?.notes || []}
                     token={token}
                     infoCandidate={data}
                     loginInfo={loginInfo}
                     onUpdateNotes={onUpdateNotes}
-                />
-            </Tab>
-            <Tab eventKey="history" title="Date Interview">
-                <DateInterview 
-                    token={token}
-                    loginInfo={loginInfo}
-                    data={data?.date_schedule} 
-                />
-            </Tab>
-            <Tab eventKey="forminterview" title="Form Interview">
-                <FormInterview 
-                    data={data}
-                    token={token}
-                    system={system}
-                    loginInfo={loginInfo}
+                    isActive={activeTab === "notes"}
                 />
             </Tab>
         </Tabs>
@@ -454,8 +696,7 @@ const StyleCanvas = styled(Offcanvas) `
         align-items: center;
         span {
             color: var(--color-main);
-            font-weight: normal;
-            font-family: var(--font-main);
+            font-weight: 600;
             background: rgba(var(--bs-primary-rgb), .1) !important;
             margin-left: 1rem;
         }
@@ -489,6 +730,15 @@ const StyleCanvas = styled(Offcanvas) `
             align-items: flex-start;
             margin-bottom: 1rem;
             border-bottom: solid 1px var(--bs-border-color-translucent);
+            .description {
+                flex: 1 1 auto;
+                margin-left: 1rem;
+                p {
+                    margin-bottom: 0;
+                    font-size: .875rem;
+                    color: var(--color-text);
+                }
+            }
             .header-profile {
                 display: flex;
                 justify-content: space-between;

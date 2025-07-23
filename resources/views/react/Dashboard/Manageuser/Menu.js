@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import { ErrorTemplate } from '../Component/ErrorTemplate';
 import Select from 'react-select';
 
-export const Menu = ({ token, setPage }) => {
+export const Menu = ({ endpoint, token, setPage }) => {
 
     const [dataMenu, setDataMenu] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export const Menu = ({ token, setPage }) => {
     const fetchMenus = () => {
         setLoading(true);
         setErrors(false);
-        apiGet('/menu', token)
+        apiGet(endpoint, '/menu', token)
             .then(data => {
                 setLoading(false);
                 setDataMenu(data?.data || []);
@@ -145,7 +145,7 @@ export const Menu = ({ token, setPage }) => {
         if (showAddMenu) {
             if (addSystemOptions.length === 0) {
                 setLoadingAddSystem(true);
-                apiGet('/system', token)
+                apiGet(endpoint, '/system', token)
                     .then(res => {
                         const options = (res.data || []).map(sys => ({
                             value: sys.system_id,
@@ -157,7 +157,7 @@ export const Menu = ({ token, setPage }) => {
             }
             if (addMenuOptions.length === 0) {
                 setLoadingAddMenu(true);
-                apiGet('/menu', token)
+                apiGet(endpoint, '/menu', token)
                     .then(res => {
                         const options = (res.data || []).map(menu => ({
                             value: menu.menu_id,
@@ -182,14 +182,14 @@ export const Menu = ({ token, setPage }) => {
     const handleConfirmDelete = async () => {
         if (!menuToDelete) return;
         try {
-            await apiDelete(`/menu/${menuToDelete}`, token);
+            await apiDelete(endpoint, `/menu/${menuToDelete}`, token);
             toast.success('Menu berhasil dihapus!', {
                 position: "top-right",
                 autoClose: 3000
             });
             setShowDeletePopup(false);
             setMenuToDelete(null);// Refresh data menu
-                apiGet('/menu', token)
+                apiGet(endpoint, '/menu', token)
                     .then(data => setDataMenu(data?.data || []))
                     .catch(err => {
                         console.error('Failed to refresh:', err);
@@ -255,14 +255,14 @@ export const Menu = ({ token, setPage }) => {
             try {
                 if (isEdit && editMenuId) {
                     // Edit menu
-                    await apiPut(`/menu/${editMenuId}`, token, dataToAdd);
+                    await apiPut(endpoint, `/menu/${editMenuId}`, token, dataToAdd);
                     toast.success('Menu berhasil diupdate!', {
                         position: "top-right",
                         autoClose: 3000
                     });
                 } else {
                     // Add menu
-                    await apiPost('/menu', token, dataToAdd);
+                    await apiPost(endpoint, '/menu', token, dataToAdd);
                     toast.success('Menu berhasil ditambahkan!', {
                         position: "top-right",
                         autoClose: 3000
@@ -271,7 +271,7 @@ export const Menu = ({ token, setPage }) => {
                 setShowAddMenu(false);
                 setIsEdit(false);
                 setEditMenuId(null);
-                apiGet('/menu', token)
+                apiGet(endpoint, '/menu', token)
                     .then(data => setDataMenu(data?.data || []))
                     .catch(err => {
                         console.error('Failed to refresh menu after update:', err);

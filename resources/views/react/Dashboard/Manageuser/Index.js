@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 import { LoadingAnimation } from '../Component/Loading';
 import { ErrorTemplate, ServerErrorTemplate } from '../Component/ErrorTemplate';
 
-export const Index = ({ token, setPage }) => {
+export const Index = ({ endpoint, token, setPage }) => {
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -25,7 +25,7 @@ export const Index = ({ token, setPage }) => {
     const fetchUsers = () => {
         setLoading(true);
         setErrors(false);
-        apiGet('/users', token)
+        apiGet(endpoint, '/users', token)
             .then(data => {
                 setLoading(false);
                 setUsers(data?.data || []);
@@ -141,7 +141,7 @@ export const Index = ({ token, setPage }) => {
         if (showAddUser) {
             if (employeeOptions.length === 0) {
                 setLoadingEmployee(true);
-                apiGet('/employees', token)
+                apiGet(endpoint, '/employees', token)
                     .then(res => {
                         const options = (res.data.data || []).map(emp => ({
                             value: emp.id,
@@ -153,7 +153,7 @@ export const Index = ({ token, setPage }) => {
             }
             if (roleOptions.length === 0) {
                 setLoadingRole(true);
-                apiGet('/roles', token)
+                apiGet(endpoint, '/roles', token)
                     .then(res => {
                         const options = (res.data.data || []).map(role => ({
                             value: role.id,
@@ -178,14 +178,14 @@ export const Index = ({ token, setPage }) => {
     const handleConfirmDelete = async () => {
         if (!userToDelete) return;
         try {
-            await apiDelete('/users', token, { params: { id: userToDelete } });
+            await apiDelete(endpoint, '/users', token, { params: { id: userToDelete } });
             toast.success('User berhasil dihapus!', {
                 position: "top-right",
                 autoClose: 3000
             });
             setShowDeletePopup(false);
             setUserToDelete(null);                // Refresh data user
-                apiGet('/users', token)
+                apiGet(endpoint, '/users', token)
                     .then(data => setUsers(data?.data?.data || []))
                     .catch(err => {
                         console.error('Failed to refresh users:', err);
@@ -250,14 +250,14 @@ export const Index = ({ token, setPage }) => {
             try {
                 if (isEdit && editUserId) {
                     // Edit user
-                    await apiPut('/users', token, dataToSend, { params: { id: editUserId } });
+                    await apiPut(endpoint, '/users', token, dataToSend, { params: { id: editUserId } });
                     toast.success('User berhasil diupdate!', {
                         position: "top-right",
                         autoClose: 3000
                     });
                 } else {
                     // Add user
-                    await apiPost('/users', token, dataToSend);
+                    await apiPost(endpoint, '/users', token, dataToSend);
                     toast.success('User berhasil ditambahkan!', {
                         position: "top-right",
                         autoClose: 3000
@@ -266,7 +266,7 @@ export const Index = ({ token, setPage }) => {
                 setShowAddUser(false);
                 setIsEdit(false);
                 setEditUserId(null);
-                apiGet('/users', token)
+                apiGet(endpoint, '/users', token)
                     .then(data => setUsers(data?.data?.data || []))
                     .catch(err => {
                         console.error('Failed to refresh users after update:', err);

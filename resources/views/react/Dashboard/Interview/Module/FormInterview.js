@@ -218,8 +218,7 @@ const StyleCanvas = styled(Offcanvas) `
         align-items: center;
         span {
             color: var(--color-main);
-            font-weight: normal;
-            font-family: var(--font-main);
+            font-weight: 600;
             background: rgba(var(--bs-primary-rgb), .1) !important;
             margin-left: 1rem;
         }
