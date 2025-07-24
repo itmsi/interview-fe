@@ -176,7 +176,7 @@ const StyleSideMenu = styled(Col)`
             text-decoration: none;
             color:var(--color-text);
             font-family: var(--font-primary);
-            display: inline-flex;
+            display: block;
             align-items: center;
             padding:8px 10px;
             position: relative;

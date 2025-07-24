@@ -200,22 +200,22 @@ export const InterviewScoreChart = ({ metrics = [] }) => {
                                         <div className='d-flex justify-content-between align-items-center mb-1'>
                                             <small className='fw-bold text-dark'>{value}</small>
                                             <small className={`badge ${isAboveTarget ? 'bg-success' : 'bg-warning'}`}>
-                                                {standard === 0 ? 'Tidak Ada Target' : (isAboveTarget ? 'Tercapai' : 'Belum Tercapai')}
+                                                {standard === 0 ? 'No Target' : (isAboveTarget ? 'Achieved' : 'Not Achieved')}
                                             </small>
                                         </div>
                                         
                                         {/* Score Details */}
                                         <div className='score-details mb-2'>
                                             <div className='d-flex justify-content-between'>
-                                                <span className='score-label'>Skor Actual:</span>
+                                                <span className='score-label'>Actual Score:</span>
                                                 <span className='score-value fw-bold'>{actual}</span>
                                             </div>
                                             <div className='d-flex justify-content-between'>
-                                                <span className='score-label'>Target Standard:</span>
-                                                <span className='score-value'>{standard === 0 ? 'Tidak Ada Target' : standard}</span>
+                                                <span className='score-label'>Standard Target:</span>
+                                                <span className='score-value'>{standard === 0 ? 'No Target' : standard}</span>
                                             </div>
                                             <div className='d-flex justify-content-between'>
-                                                <span className='score-label'>Persentase:</span>
+                                                <span className='score-label'>Percentage:</span>
                                                 <span className='score-value fw-bold text-primary'>{percentage}%</span>
                                             </div>
                                         </div>

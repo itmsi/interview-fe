@@ -4,7 +4,7 @@ import { GrAttachment } from "react-icons/gr";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styled from 'styled-components';
-import { apiPost, apiPatch } from '../Helper/Helper';
+import { apiPost, apiPatch, apiPostFormData } from '../Helper/Helper';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import dayjs from 'dayjs';
@@ -121,38 +121,58 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
 
         // Persiapkan data untuk dikirim
         const submitData = { ...form };
+        
+        // Format date jika ada
+        if (submitData.candidate_date_birth) {
+            submitData.candidate_date_birth = dayjs(submitData.candidate_date_birth).format('YYYY-MM-DD');
+        }
 
         // Jika ada file yang di-upload, gunakan FormData
         const hasFile = form.candidate_foto instanceof File || form.candidate_resume instanceof File;
         
-        let dataToSend = submitData;
+        let dataToSend;
         if (hasFile) {
             const formData = new FormData();
             Object.keys(submitData).forEach(key => {
                 const value = submitData[key];
-                if (value !== null && value !== undefined) {
+                if (value !== null && value !== undefined && value !== '') {
                     formData.append(key, value);
                 }
             });
             dataToSend = formData;
+        } else {
+            // Bersihkan data kosong untuk JSON
+            dataToSend = Object.keys(submitData).reduce((acc, key) => {
+                const value = submitData[key];
+                if (value !== null && value !== undefined && value !== '') {
+                    acc[key] = value;
+                }
+                return acc;
+            }, {});
         }
 
         try {
             let response;
             if (isEdit) {
-                console.log({
-                    submitData: dataToSend
-                });
-                
-                response = await apiPatch(endpoint, `/candidates/${initialData.id}`, token, dataToSend);
+                response = await apiPostFormData(endpoint, `/candidates/${initialData.id}/multipart`, token, dataToSend);
                 toast.success('Candidate updated successfully!');
             } else {
-                response = await apiPost(endpoint, '/candidates', token, dataToSend);
+                if (hasFile) {
+                    response = await apiPostFormData(endpoint, '/candidates/multipart', token, dataToSend);
+                } else {
+                    response = await apiPostFormData(endpoint, '/candidates/multipart', token, dataToSend);
+                }
+                
                 toast.success('Candidate created successfully!');
             }
-            onSave(response.data);
+            
+            // Callback setelah berhasil
+            if (onSave && response?.data) {
+                onSave(response.data);
+            }
         } catch (error) {
-            toast.error(`Failed to ${isEdit ? 'update' : 'create'} candidate: ` + error.message);
+            console.error('API Error:', error);
+            toast.error(`Failed to ${isEdit ? 'update' : 'create'} candidate: ` + (error.response?.data?.message || error.message));
         }
     };
 
@@ -298,7 +318,7 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
                         <Form.Label className='m-0 fs-14 color-label col ps-2'>Date of Birth</Form.Label>
                         <DatePicker
                             selected={form.candidate_date_birth}
-                            onChange={(date) => setForm({ ...form, candidate_date_birth: dayjs(date).format('YYYY-MM-DD') })}
+                            onChange={(date) => setForm({ ...form, candidate_date_birth: date })}
                             dateFormat="dd MMM yyyy"
                             className="form-control h-field height-date"
                             placeholderText="Select Date of Birth"

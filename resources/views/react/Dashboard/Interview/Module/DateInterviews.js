@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { CanvasFormInterview } from './Form/CanvasFormInterview';
 import { ModalScoreInterview } from './Form/ModalScoreInterview';
+import { usePDFDownload } from './Form/usePDFDownload';
 
 dayjs.extend(customParseFormat);
 
@@ -40,6 +41,8 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
         duration: '',
     });
 
+    const { downloadPDF, isGenerating } = usePDFDownload();
+
     // Fetch schedule data from API when tab is active
     const fetchScheduleData = async () => {
         if (!candidate?.id || !endpoint || !token) return;
@@ -54,7 +57,7 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
             };
 
             const response = await apiGet(endpoint, `/date-interview`, token, { params: params });
-
+            
             const transformedData = (response?.data || []).map(item => {
                 // Transform the new interview structure to match the expected formInterviews format
                 const formInterviews = [];
@@ -69,10 +72,18 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
                             interview: [], // This will contain the flattened questions/forms
                             form_interviews: interviewGroup.form_interviews || [], // Keep original structure for reference
                             data_score: [],
+                            data_candidate: {
+                                name_candidate: candidate.name || "Unknown",
+                                company_candidate: candidate.company || null,
+                                position_candidate: candidate.position || null,
+                                age_candidate: candidate.age || null,
+                                gender_candidate: candidate.personal_information?.[0]?.candidate_gender || null,
+                                id_alias_candidate: candidate.id_candidate || null,
+                                interviewer_candidate: interviewGroup.assigned_name || "Unknown",
+                                date_interview_candidate: item.schedule_interview_date || null,
+                                duration_candidate: item.schedule_interview_duration || null,
+                            }
                         };
-                        
-                        // Collect data_score from questions.total_score
-                        const dataScoreArray = [];
                         
                         // Flatten all form interviews into a single interview array
                         if (interviewGroup.form_interviews && Array.isArray(interviewGroup.form_interviews)) {
@@ -580,6 +591,8 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
                 onCreateFormInterview={handleCreateFormInterview}
                 onDeleteFormInterview={handleDeleteFormInterview}
                 onEditFormInterview={handleEditFormInterview}
+                downloadPDF={downloadPDF}
+                isGenerating={isGenerating}
             />
         </div>
     </>)
@@ -594,7 +607,9 @@ const ListDateInterview = ({
     expandedSchedules,
     onCreateFormInterview,
     onDeleteFormInterview,
-    onEditFormInterview
+    onEditFormInterview,
+    downloadPDF,
+    isGenerating
 }) => {    
     return(
         <div className="card-body">
@@ -682,6 +697,8 @@ const ListDateInterview = ({
                                                     scheduleId={ref.id}
                                                     onDeleteFormInterview={onDeleteFormInterview}
                                                     onEditFormInterview={onEditFormInterview}
+                                                    downloadPDF={downloadPDF}
+                                                    isGenerating={isGenerating}
                                                 />
                                             </div>
                                         </Collapse>
@@ -775,7 +792,9 @@ const FormInterviewList = ({
     formInterviews,
     scheduleId,
     onDeleteFormInterview,
-    onEditFormInterview 
+    onEditFormInterview,
+    downloadPDF,
+    isGenerating
 }) => {
 
     const getFormStatus = (formData) => {
@@ -788,6 +807,19 @@ const FormInterviewList = ({
             !item.question || item.question.trim() === '' ||
             item.score === null || item.score === undefined || item.score === ''
         );
+        
+        if (hasEmptyFields) {
+            return 'incomplete';
+        } else {
+            return 'completed';
+        }
+    };
+
+    // Function to check completion status
+    const checkCompletionStatus = (formInterview) => {
+        const hasEmptyFields = formInterview.questions.some(question => {
+            return question.total_score === null || question.total_score === undefined || question.total_score === '';
+        });
         
         if (hasEmptyFields) {
             return 'incomplete';
@@ -813,6 +845,7 @@ const FormInterviewList = ({
     }
     
     const roleName = system?.roles?.[0]?.role_name;
+
     return (
         <Row className="g-3">
             {formInterviews.map((form, idx) => {
@@ -867,7 +900,11 @@ const FormInterviewList = ({
                                         </button>
                                     </Tooltips>
                                     <Tooltips title={"Download PDF"} position="top">
-                                        <button className="fs-12 btn btn-sm btn-outline-secondary">
+                                        <button 
+                                            className="fs-12 btn btn-sm btn-outline-secondary"
+                                            onClick={() => downloadPDF(form)}
+                                            disabled={isGenerating}
+                                        >
                                             <FaRegFilePdf className='fs-6' /> PDF
                                         </button>
                                     </Tooltips>

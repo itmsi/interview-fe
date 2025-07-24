@@ -453,11 +453,12 @@ const QuestionSIAH = ({
                             </Accordion.Item>
                         ))}
                     </Accordion>
-                    <div className="mt-4">
+                    <div className="my-4">
                         <Button 
                             type="submit" 
-                            variant="success" 
+                            variant="primary" 
                             disabled={isLoading}
+                            className='fs-6 font-primary py-2 px-5'
                         >
                             {isLoading 
                                 ? (isEditMode ? 'Updating...' : 'Saving...') 
@@ -465,7 +466,7 @@ const QuestionSIAH = ({
                             }
                         </Button>
                         {isSubmit && 
-                            <Button type="button" variant="success" className="ms-2">
+                            <Button type="button" variant="primary" className="ms-2">
                                 Show Result {titleForm}
                             </Button>
                         }
@@ -479,6 +480,8 @@ const QuestionSIAH = ({
 const StyledQuestion = styled(Container) `
     --bs-accordion-body-padding-y:1.25rem;
     --bs-accordion-inner-border-radius: 10px;
+    border: solid 1px var(--bs-border-color);
+    border-top: 0;
     background-color: #f5f5f5;
     
     .title {

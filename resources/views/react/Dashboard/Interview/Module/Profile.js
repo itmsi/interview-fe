@@ -137,7 +137,7 @@ const DownloadResume = ({ data }) => {
                     </div>
                     <div className="col-md-6">
                         <div className="mb-3 text-md-end">
-                            <a className="btn btn-dark d-inline-flex align-items-center fs-14 font-primary" href={data} data-discover="true">
+                            <a className="btn btn-dark d-inline-flex align-items-center fs-14 font-primary" href={data} target='_blank' data-discover="true">
                                 <MdOutlineFileDownload className='me-1 fs-5' />
                                 Download
                             </a>
