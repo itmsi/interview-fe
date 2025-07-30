@@ -304,6 +304,7 @@ const LayoutCandidat = ({
         setSelectedCandidate(null);
     };
 
+    const roleName = system?.roles?.[0]?.role_name;
     return(
         <>
             <div className="d-flex justify-content-end align-items-center mb-3 action-create-candidate">
@@ -456,6 +457,7 @@ const LayoutCandidat = ({
                         <Badge bg={'primary'}>{selectedCandidate && selectedCandidate.id_candidate}</Badge>
                         
                         {/* Button Actions */}
+                        {roleName && roleName.toLowerCase() === 'hr' && (
                         <div className="ms-3 d-flex gap-2">
                             <Tooltips title={"Edit Candidate"} position="top">
                                 <Button
@@ -479,6 +481,7 @@ const LayoutCandidat = ({
                                 </Button>
                             </Tooltips>
                         </div>
+                        )}
                     </Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
@@ -577,13 +580,6 @@ const TabCanvas = ({
                     loginInfo={loginInfo}
                 />
             </Tab>
-            {/* <Tab eventKey="hiringpipline" title="Assigned">
-                <Assigned
-                    data={data}
-                    token={token}
-                    loginInfo={loginInfo}
-                />
-            </Tab> */}
             <Tab eventKey="history" title="Date Interview">
                 <DateInterview 
                     endpoint={endpoint}
@@ -594,15 +590,6 @@ const TabCanvas = ({
                     isActive={activeTab === "history"}
                 />
             </Tab>
-            {/* <Tab eventKey="forminterview" title="Form Interview">
-                <FormInterview 
-                    endpoint={endpoint}
-                    data={data}
-                    token={token}
-                    system={system}
-                    loginInfo={loginInfo}
-                />
-            </Tab> */}
             <Tab eventKey="backgroundCheck" title="Background Check">
                 <BackgroundCheck
                     endpoint={endpoint}

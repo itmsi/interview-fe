@@ -5,10 +5,6 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Lege
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 export const BulletChart = ({ metrics = [], standard_value = [] }) => {
-    console.log({
-        standard_value
-    });
-    
     const companyValues = metrics.map(m => m.company_value);
     const actualScores = metrics.map(m => m.total_score);
     

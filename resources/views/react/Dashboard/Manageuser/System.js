@@ -220,10 +220,6 @@ export const System = ({ endpoint, token, setPage }) => {
             setValidated(true);
         }
     };
-    console.log({
-        sortedDataSystem
-    });
-    
     return (
         <React.Fragment>
             {!errors ?

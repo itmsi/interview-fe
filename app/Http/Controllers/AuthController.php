@@ -51,8 +51,11 @@ class AuthController extends Controller
                     session(['lifetime' => Config::get('session.lifetime')]);
                     
                     Log::info('Cookies set successfully');
-                    
+                    // dd($me['system_access'][0]['system_name'] === 'Interview');
                     // Redirect to dashboard only on successful login
+                    if($me['system_access'][0]['system_name'] === 'Interview') {
+                        return redirect()->route('interview/candidate');
+                    }
                     return redirect()->route('dashboard');
                 } else {
                     Log::warning('Login failed', ['login_response' => $login]);

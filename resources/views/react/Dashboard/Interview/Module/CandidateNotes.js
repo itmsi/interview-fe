@@ -3,6 +3,7 @@ import { Notes } from './Form/Notes';
 import { Container } from 'react-bootstrap';
 import { apiGet, apiPost } from '../../Helper/Helper';
 import { toast } from 'react-toastify';
+import { assign } from 'lodash';
 
 const CandidateNotes = ({ 
     candidateId, 
@@ -77,7 +78,15 @@ const CandidateNotes = ({
                 candidate_id: candidateId,
                 notes: noteText,
                 create_by: loginInfo?.employee?.name || "Unknown User",
-                create_role: system?.roles?.[0]?.role_slug || 'role_slug'
+                assigned_data: [
+                    {
+                        cum_id: loginInfo?.employee?.id || loginInfo?.id,
+                        assigned_name: loginInfo?.employee?.name || loginInfo?.name || "Unknown",
+                        assigned_email: loginInfo?.employee?.email || loginInfo?.email || "",
+                        assigned_role: system?.roles?.[0]?.role_name || 'role_name',
+                        assigned_role_alias: system?.roles?.[0]?.role_slug || 'role_slug'
+                    }
+                ]
             };
 
             // Post to API

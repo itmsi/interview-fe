@@ -103,7 +103,7 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     });
     Route::controller(DashboardController::class)->prefix('interview')->group(function () {
         Route::get('/interview', 'index');
-        Route::get('/candidate', 'index');
+        Route::get('/candidate', 'index')->name('interview/candidate');
     });
     Route::controller(DashboardController::class)->prefix('payslip')->group(function () {
         Route::get('/wni', 'index');

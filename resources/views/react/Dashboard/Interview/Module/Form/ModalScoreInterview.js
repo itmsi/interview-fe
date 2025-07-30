@@ -10,7 +10,7 @@ export const ModalScoreInterview = ({
 }) => {
     return (
         <Modal
-            size={`${(roleName === "Super Admin" || roleName === "hr") ? "lg" : "md"}`}
+            size={`${(roleName === "Super Admin" || roleName === "hr") ? "lg" : "lg"}`}
             centered
             show={showScore}
             onHide={() => setShowScore(false)}

@@ -52,7 +52,7 @@ export const DateInterview = ({ system, token, data, loginInfo, endpoint, infoCa
             const params = {
                 candidate_id: candidate.id,
                 systemName: "interview",
-                menuName: "date-interview",
+                menuName: "candidate",
                 permissionName: "read"
             };
 
@@ -610,7 +610,8 @@ const ListDateInterview = ({
     onEditFormInterview,
     downloadPDF,
     isGenerating
-}) => {    
+}) => {
+    const roleName = system?.roles?.[0]?.role_name;
     return(
         <div className="card-body">
             <div className="table-responsive">
@@ -648,15 +649,17 @@ const ListDateInterview = ({
                                     <td valign='middle'>{ref.date} - {ref.time}</td>
                                     <td valign='middle' className='text-center'>
                                         
-                                        <Tooltips title={"Edit Date Interview"} position="top">
-                                            <button 
-                                                onClick={() => onEdit(ref.id)}
-                                                className="btn btn-sm btn-transparent me-2"
-                                                title="Edit Schedule"
-                                            >
-                                                <FaRegPenToSquare />
-                                            </button>
-                                        </Tooltips>
+                                        {roleName && roleName.toLowerCase() === 'hr' && (
+                                            <Tooltips title={"Edit Date Interview"} position="top">
+                                                <button 
+                                                    onClick={() => onEdit(ref.id)}
+                                                    className="btn btn-sm btn-transparent me-2"
+                                                    title="Edit Schedule"
+                                                >
+                                                    <FaRegPenToSquare />
+                                                </button>
+                                            </Tooltips>
+                                        )}
                                             
                                         <Tooltips title={"Create Form Interview"} position="top">
                                             <button 
@@ -666,16 +669,18 @@ const ListDateInterview = ({
                                                 <FaPlus />
                                             </button>
                                         </Tooltips>
-                                            
-                                        <Tooltips title={"Delete Date Interview"} position="top">
-                                            <button 
-                                                className="btn btn-sm btn-transparent me-2"
-                                                onClick={() => onDelete(ref.id)}
-                                                title="Delete Schedule"
-                                            >
-                                                <FaRegTrashCan />
-                                            </button>
-                                        </Tooltips>
+
+                                        {roleName && roleName.toLowerCase() === 'hr' && (
+                                            <Tooltips title={"Delete Date Interview"} position="top">
+                                                <button 
+                                                    className="btn btn-sm btn-transparent me-2"
+                                                    onClick={() => onDelete(ref.id)}
+                                                    title="Delete Schedule"
+                                                >
+                                                    <FaRegTrashCan />
+                                                </button>
+                                            </Tooltips>
+                                        )}
                                             
                                         <Tooltips title={expandedSchedules[ref.id] ? "Collapse" : "Expand"} position="top">
                                             <button 
@@ -814,19 +819,6 @@ const FormInterviewList = ({
             return 'completed';
         }
     };
-
-    // Function to check completion status
-    const checkCompletionStatus = (formInterview) => {
-        const hasEmptyFields = formInterview.questions.some(question => {
-            return question.total_score === null || question.total_score === undefined || question.total_score === '';
-        });
-        
-        if (hasEmptyFields) {
-            return 'incomplete';
-        } else {
-            return 'completed';
-        }
-    };
     
     if (!formInterviews || formInterviews.length === 0) {
         return (
@@ -839,13 +831,11 @@ const FormInterviewList = ({
     const [showScore, setShowScore] = useState(false);
     const [dataScore, setdataScore] = useState([]);
     const handleShowScore = (form) => {
-        console.log({form});
         setdataScore(form.data_score || []);
         setShowScore(true);
     }
     
     const roleName = system?.roles?.[0]?.role_name;
-
     return (
         <Row className="g-3">
             {formInterviews.map((form, idx) => {
@@ -882,15 +872,18 @@ const FormInterviewList = ({
                                     </p>
                                 )}
                                 <div className="d-flex gap-2 mt-3">
-                                    <Tooltips title={"Edit Form Interview"} position="top">
-                                        <button 
-                                            className="btn fs-12 btn-sm btn-outline-secondary"
-                                            onClick={() => onEditFormInterview(form, scheduleId)}
-                                            title="Edit Form Interview"
-                                        >
-                                            <FaRegPenToSquare className='fs-6' /> Edit
-                                        </button>
-                                    </Tooltips>
+                                    {/* Show Edit button only if assigned_role_alias matches user's role */}
+                                    {roleName.toLowerCase() === form.assigned_role_alias.toLowerCase() && (
+                                        <Tooltips title={"Edit Form Interview"} position="top">
+                                            <button 
+                                                className="btn fs-12 btn-sm btn-outline-secondary"
+                                                onClick={() => onEditFormInterview(form, scheduleId)}
+                                                title="Edit Form Interview"
+                                            >
+                                                <FaRegPenToSquare className='fs-6' /> Edit
+                                            </button>
+                                        </Tooltips>
+                                    )}
                                     <Tooltips title={"Show Score"} position="top">
                                         <button 
                                             className="fs-12 btn btn-sm btn-outline-secondary"
@@ -908,6 +901,7 @@ const FormInterviewList = ({
                                             <FaRegFilePdf className='fs-6' /> PDF
                                         </button>
                                     </Tooltips>
+                                    {roleName.toLowerCase() === form.assigned_role_alias.toLowerCase() && (
                                     <Tooltips title={"Delete Form Interview"} position="top">
                                         <button 
                                             className="fs-12 btn btn-sm btn-outline-danger"
@@ -916,6 +910,7 @@ const FormInterviewList = ({
                                             <FaRegTrashCan className='fs-6' /> Delete
                                         </button>
                                     </Tooltips>
+                                    )}
                                 </div>
                             </div>
                         </div>

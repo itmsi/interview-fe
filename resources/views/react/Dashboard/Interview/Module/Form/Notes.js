@@ -12,13 +12,11 @@ export const Notes = ({ loading, data, onAddNote }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleOpenModal = () => {
-        console.log('Opening modal...');
         setShowModal(true);
         setNewNote('');
     };
 
     const handleCloseModal = () => {
-        console.log('Closing modal...');
         setShowModal(false);
         setNewNote('');
     };

@@ -225,32 +225,75 @@ const addLogoToDoc = (doc, logoData, x, y, width, height) => {
 const generateManualAssessmentTable = (doc, formData, yPosition) => {
     const posisi_x = 0;
     let currentY = yPosition - 12;
-    const rowHeight = 8;
-    const colNoWidth = 10;
-    const colCompanyWidth = 22;
-    const colAspectWidth = 70;
-    const colQuestionWidth = 70;
-    const colScoreWidth = 10;
-    const colRemarksWidth = 30;
+    const baseRowHeight = 8;
+    const pageWidth = doc.internal.pageSize.width;
+    const totalTableWidth = pageWidth - 20; // Margin 10mm each side
+    
+    // New column widths untuk fit paper width
+    const colCompanyWidth = 20;
+    const colStandardWidth = 20;
+    const colAspectWidth = 45;
+    const colQuestionWidth = 40;
+    const colScoreWidth = 15;
+    const colRemarksWidth = pageWidth - (colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth); // Sisa space untuk remarks (no gap)
+    
+    // Multiplier function
+    const getMultipliedScore = (companyValue, score) => {
+        switch (companyValue) {
+            case 'SIAH':
+                return score * 2;
+            case '7 Values':
+                return score * 1.7;
+            case 'CSE':
+                return score * 2;
+            default:
+                return score;
+        }
+    };
+    
+    // Standard values untuk comparison
+    const standard_values = {
+        'SIAH': 40,
+        '7 Values': 60,
+        'CSE': 40,
+        'SDT': 40,
+        'EXPERIENCE': 20
+    };
     
     // Header
     doc.setFillColor(2, 83, 165); // Header biru
-    doc.rect(posisi_x, currentY, colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, rowHeight, 'F');
+    doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, baseRowHeight, 'F');
     
-    // Header text
+    // Header text dengan better alignment
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(7);
+    doc.setFontSize(6);
     doc.setFont('helvetica', 'bold');
-    doc.text('No.', posisi_x + 2, currentY + 5);
-    doc.text('Company Value', posisi_x + colNoWidth + 2, currentY + 5);
-    doc.text('Aspect', posisi_x + colNoWidth + colCompanyWidth + 2, currentY + 5);
-    doc.text('Question/Answer', posisi_x + colNoWidth + colCompanyWidth + colAspectWidth + 2, currentY + 5);
-    doc.text('Score', posisi_x + colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + 2, currentY + 5);
-    doc.text('Remarks', posisi_x + colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + colScoreWidth + 2, currentY + 5);
+    doc.text('Company', posisi_x + (colCompanyWidth / 2), currentY + 3, { align: 'center' });
+    doc.text('Value', posisi_x + (colCompanyWidth / 2), currentY + 6, { align: 'center' });
     
-    currentY += rowHeight;
+    doc.text('Standard', posisi_x + colCompanyWidth + (colStandardWidth / 2), currentY + 3, { align: 'center' });
+    doc.text('Point', posisi_x + colCompanyWidth + (colStandardWidth / 2), currentY + 6, { align: 'center' });
     
-    // Group data by company_value
+    doc.text('Aspect', posisi_x + colCompanyWidth + colStandardWidth + (colAspectWidth / 2), currentY + 5, { align: 'center' });
+    doc.text('Question', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + (colQuestionWidth / 2), currentY + 5, { align: 'center' });
+    doc.text('Score', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
+    doc.text('Answer/Remarks', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + (colRemarksWidth / 2), currentY + 5, { align: 'center' });
+    
+    // Header borders
+    doc.setLineWidth(0.1);
+    doc.setDrawColor(255, 255, 255);
+    doc.line(posisi_x + colCompanyWidth, currentY, posisi_x + colCompanyWidth, currentY + baseRowHeight);
+    doc.line(posisi_x + colCompanyWidth + colStandardWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth, currentY + baseRowHeight);
+    doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, currentY + baseRowHeight);
+    doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, currentY + baseRowHeight);
+    doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, currentY + baseRowHeight);
+    
+    currentY += baseRowHeight;
+    
+    // Define desired order
+    const desiredOrder = ['SIAH', '7 Values', 'CSE', 'SDT', 'EXPERIENCE'];
+    
+    // Group data by company_value and sort by desired order
     const groupedData = {};
     if (formData.interview && Array.isArray(formData.interview)) {
         formData.interview.forEach(item => {
@@ -261,22 +304,37 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
         });
     }
     
-    let questionNumber = 1;
+    // Sort by desired order
+    const sortedCompanyValues = desiredOrder.filter(company => groupedData[company]);
     
-    Object.keys(groupedData).forEach((companyValue, companyIndex) => {
+    sortedCompanyValues.forEach((companyValue, companyIndex) => {
         const items = groupedData[companyValue];
-        let companyTotal = 0;
         const startY = currentY; // Record start position untuk company value
         
         items.forEach((item, index) => {
-            const score = item.score || 0;
-            companyTotal += score;
+            const originalScore = item.score || 0;
+            const multipliedScore = getMultipliedScore(companyValue, originalScore);
             
-            // Determine remarks based on score
-            let remarks = 'Poor';
-            if (score >= 8) remarks = 'Excellent';
-            else if (score >= 6) remarks = 'Good';
-            else if (score >= 4) remarks = 'Average';
+            // Calculate row height based on content
+            let maxLines = 1;
+            
+            // Check aspect text length
+            const aspect = item.aspect || 'N/A';
+            const wrappedAspect = doc.splitTextToSize(aspect, colAspectWidth - 4);
+            maxLines = Math.max(maxLines, wrappedAspect.length);
+            
+            // Check question text length
+            const question = item.question || 'N/A';
+            const wrappedQuestion = doc.splitTextToSize(question, colQuestionWidth - 4);
+            maxLines = Math.max(maxLines, wrappedQuestion.length);
+            
+            // Check answer text length
+            const answer = item.answer || 'N/A';
+            const wrappedAnswer = doc.splitTextToSize(answer, colRemarksWidth - 4);
+            maxLines = Math.max(maxLines, wrappedAnswer.length);
+            
+            // Calculate dynamic row height
+            const dynamicRowHeight = Math.max(baseRowHeight, maxLines * 4 + 2);
             
             // Alternate row colors untuk value
             if (index % 2 === 0) {
@@ -284,88 +342,106 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
             } else {
                 doc.setFillColor(245, 248, 251); // Lebih terang untuk alternating
             }
-            doc.rect(posisi_x, currentY, colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, rowHeight, 'F');
+            doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, dynamicRowHeight, 'F');
             
             // Draw data
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
             
-            // No.
-            doc.text(questionNumber.toString(), posisi_x + 2, currentY + 5 , { align: 'center' });
-            
             // Aspect
-            const aspect = item.aspect || 'N/A';
-            const wrappedAspect = doc.splitTextToSize(aspect, colAspectWidth - 4);
-            doc.text(wrappedAspect, posisi_x + colNoWidth + colCompanyWidth + 2, currentY + 5);
+            doc.text(wrappedAspect, posisi_x + colCompanyWidth + colStandardWidth + 2, currentY + 4);
             
-            // Question/Answer
-            const question = item.question || item.answer || 'N/A';
-            const wrappedQuestion = doc.splitTextToSize(question, colQuestionWidth - 4);
-            doc.text(wrappedQuestion, posisi_x + colNoWidth + colCompanyWidth + colAspectWidth + 2, currentY + 5);
+            // Question
+            doc.text(wrappedQuestion, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + 2, currentY + 4);
             
-            // Score
+            // Score (show multiplied score, no color)
             doc.setFont('helvetica', 'bold');
-            doc.text(score.toString(), posisi_x - 3 + colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + 8, currentY + 5, { align: 'center' });
+            doc.setTextColor(0, 0, 0); // Always black
+            doc.text(Math.round(multipliedScore).toString(), posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
             
-            // Remarks
+            // Answer/Remarks (dengan text wrapping yang lebih baik)
             doc.setFont('helvetica', 'normal');
-            doc.text(remarks, posisi_x + colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + colScoreWidth + 2, currentY + 5);
+            doc.setTextColor(0, 0, 0);
+            doc.text(wrappedAnswer, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + 2, currentY + 4);
             
-            // Borders untuk kolom kecuali company value
+            // Borders untuk kolom kecuali company value dan standard point ( merged)
             doc.setLineWidth(0.1);
-            doc.setDrawColor(128, 128, 128);
-            doc.rect(posisi_x, currentY, colNoWidth, rowHeight); // No
-            doc.rect(posisi_x + colNoWidth + colCompanyWidth, currentY, colAspectWidth, rowHeight); // Aspect
-            doc.rect(posisi_x + colNoWidth + colCompanyWidth + colAspectWidth, currentY, colQuestionWidth, rowHeight); // Question
-            doc.rect(posisi_x + colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth, currentY, colScoreWidth, rowHeight); // Score
-            doc.rect(posisi_x + colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + colScoreWidth, currentY, colRemarksWidth, rowHeight); // Remarks
+            doc.rect(posisi_x + colCompanyWidth + colStandardWidth, currentY, colAspectWidth, dynamicRowHeight); // Aspect
+            doc.rect(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, currentY, colQuestionWidth, dynamicRowHeight); // Question
+            doc.rect(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, currentY, colScoreWidth, dynamicRowHeight); // Score
+            doc.rect(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, currentY, colRemarksWidth, dynamicRowHeight); // Remarks
             
-            currentY += rowHeight;
-            questionNumber++;
+            currentY += dynamicRowHeight;
         });
         
-        // Setelah semua items, gambar company value di tengah dengan background dan border
-        const companyRowHeight = items.length * rowHeight;
-        const companyTextY = startY + (companyRowHeight / 2) + 2;
+        // Setelah semua items, gambar company value dan standard point di tengah dengan background dan border
+        const companyRowHeight = currentY - startY; // Total height dari semua rows
+        const companyTextY = startY + (companyRowHeight / 2) + 1;
         
         // Background untuk company value (spanning multiple rows)
         doc.setFillColor(2, 83, 165); // Biru untuk company value
-        doc.rect(posisi_x + colNoWidth, startY, colCompanyWidth, companyRowHeight, 'F');
+        doc.rect(posisi_x, startY, colCompanyWidth, companyRowHeight, 'F');
         
         // Company Value text (di tengah)
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         const lines = doc.splitTextToSize(companyValue, colCompanyWidth - 4);
         const lineHeight = 3;
         let textStartY = companyTextY - ((lines.length - 1) * lineHeight / 2);
         
         lines.forEach((line, i) => {
-            doc.text(line, posisi_x + colNoWidth + (colCompanyWidth / 2), textStartY + (i * lineHeight), { align: 'center' });
+            doc.text(line, posisi_x + (colCompanyWidth / 2), textStartY + (i * lineHeight), { align: 'center' });
         });
         
-        // Border untuk company value column
+        // Background untuk standard point (spanning multiple rows)
+        doc.setFillColor(2, 83, 165); // Biru untuk standard point
+        doc.rect(posisi_x + colCompanyWidth, startY, colStandardWidth, companyRowHeight, 'F');
+        
+        // Standard Point text (di tengah)
+        const standardPoint = standard_values[companyValue] || 0;
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.text(standardPoint.toString(), posisi_x + colCompanyWidth + (colStandardWidth / 2), companyTextY, { align: 'center' });
+        
+        // Border untuk company value dan standard point columns
         doc.setLineWidth(0.1);
         doc.setDrawColor(128, 128, 128);
-        doc.rect(posisi_x + colNoWidth, startY, colCompanyWidth, companyRowHeight);
+        doc.rect(posisi_x, startY, colCompanyWidth, companyRowHeight);
+        doc.rect(posisi_x + colCompanyWidth, startY, colStandardWidth, companyRowHeight);
         
-        // Total row untuk setiap company value
+        // Total row untuk setiap company value (dengan multiplier yang benar)
         doc.setFillColor(2, 83, 165); // Biru untuk total
-        doc.rect(posisi_x, currentY, colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, rowHeight, 'F');
+        doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, baseRowHeight, 'F');
         
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text('TOTAL', posisi_x + colNoWidth + 2, currentY + 5);
-        doc.text(companyTotal.toString(), posisi_x - 4 + colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + 8, currentY + 5);
+        doc.setFontSize(9);
+        doc.text('TOTAL', posisi_x + colCompanyWidth + colStandardWidth + 2, currentY + 5);
+        
+        // Calculate total dengan multiplier yang benar
+        let totalWithMultiplier = 0;
+        items.forEach(item => {
+            const originalScore = item.score || 0;
+            const multipliedScore = getMultipliedScore(companyValue, originalScore);
+            totalWithMultiplier += multipliedScore;
+        });
+        
+        doc.text(Math.round(totalWithMultiplier).toString(), posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
+        
+        // Show standard vs actual in total row
+        const standardTotal = standard_values[companyValue] || 0;
+        doc.setFontSize(7);
+        doc.text(`(Target: ${standardTotal})`, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + 2, currentY + 5);
         
         // Total row borders
         doc.setLineWidth(0.1);
         doc.setDrawColor(128, 128, 128);
-        doc.rect(posisi_x, currentY, colNoWidth + colCompanyWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, rowHeight);
+        doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, baseRowHeight);
         
-        currentY += rowHeight; // Extra space after each company section
+        currentY += baseRowHeight; // Extra space after each company section
     });
     
     return currentY + 10;
@@ -459,10 +535,11 @@ const generateSummaryText = (doc, formData, yPosition) => {
         
         validMetrics.forEach(metric => {
             const standard_value = [
+                { "company_value": "SIAH", "total_score": 40 },
+                { "company_value": "7 Values", "total_score": 60 },
                 { "company_value": "SDT", "total_score": 40 },
                 { "company_value": "CSE", "total_score": 40 },
-                { "company_value": "SIAH", "total_score": 0 },
-                { "company_value": "7 Values", "total_score": 0 }
+                { "company_value": "EXPERIENCE", "total_score": 20 },
             ];
             const standard = standard_value.find(s => s.company_value === metric.company_value);
             const standardScore = standard ? standard.total_score : 0;
@@ -477,13 +554,23 @@ const generateSummaryText = (doc, formData, yPosition) => {
     return currentY + 15;
 };
 
-// Function untuk generate comprehensive score section seperti show score
-const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
-    let currentY = yPosition;
-    const pageHeight = doc.internal.pageSize.height;
-    const pageWidth = doc.internal.pageSize.width;
+// Helper function untuk generate score result tanpa tabel (untuk card)
+const generateScoreResultForCard = (formData) => {
+    // Multiplier function
+    const getMultipliedScore = (companyValue, score) => {
+        switch (companyValue) {
+            case 'SIAH':
+                return score * 2;
+            case '7 Values':
+                return score * 1.7;
+            case 'CSE':
+                return score * 2;
+            default:
+                return score;
+        }
+    };
     
-    // Calculate scores
+    // Calculate scores dengan multiplier
     const validMetrics = Array.isArray(formData.data_score) ? formData.data_score.filter(m => 
         m && 
         typeof m === 'object' && 
@@ -491,7 +578,7 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
         m.company_value
     ) : [];
 
-    const total = validMetrics.reduce((sum, m) => sum + m.total_score, 0);
+    const total = validMetrics.reduce((sum, m) => sum + getMultipliedScore(m.company_value, m.total_score), 0);
     
     const getEvaluation = (total) => {
         if (total <= 20) return { remark: "Very Poor", recommendation: "Reject", color: [220, 53, 69] };
@@ -503,148 +590,125 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
 
     const { remark, recommendation, color } = getEvaluation(total);
     
-    // 1. Total Score dengan Visual Indicator
-    // doc.setFillColor(2, 83, 165);
-    // doc.rect(20, currentY, pageWidth - 40, 15, 'F');
+    return { 
+        total: Math.round(total), 
+        remark, 
+        recommendation, 
+        color 
+    };
+};
+
+// Function untuk generate comprehensive score section seperti show score
+const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
+    let currentY = yPosition;
+    const pageHeight = doc.internal.pageSize.height;
+    const pageWidth = doc.internal.pageSize.width;
     
-    // doc.setTextColor(255, 255, 255);
-    // doc.setFontSize(14);
-    // doc.setFont('helvetica', 'bold');
-    // doc.text('TOTAL SCORE OVERVIEW', 25, currentY + 10);
-    // currentY += 20;
+    // Multiplier function
+    const getMultipliedScore = (companyValue, score) => {
+        switch (companyValue) {
+            case 'SIAH':
+                return score * 2;
+            case '7 Values':
+                return score * 1.7;
+            case 'CSE':
+                return score * 2;
+            default:
+                return score;
+        }
+    };
     
-    // // Score Circle/Bar dengan visual yang lebih menarik
-    const scoreBarWidth = 120;
-    const scoreBarHeight = 20;
-    const scoreBarX = pageWidth / 4;
+    // Calculate scores dengan multiplier
+    const validMetrics = Array.isArray(formData.data_score) ? formData.data_score.filter(m => 
+        m && 
+        typeof m === 'object' && 
+        typeof m.total_score === 'number' &&
+        m.company_value
+    ) : [];
+
+    // Sort metrics by desired order
+    const desiredOrder = ['SIAH', '7 Values', 'CSE', 'SDT', 'EXPERIENCE'];
+    const sortedMetrics = [...validMetrics].sort((a, b) => {
+        const indexA = desiredOrder.indexOf(a.company_value);
+        const indexB = desiredOrder.indexOf(b.company_value);
+        
+        const orderA = indexA === -1 ? 999 : indexA;
+        const orderB = indexB === -1 ? 999 : indexB;
+        
+        return orderA - orderB;
+    });
+
+    const total = sortedMetrics.reduce((sum, m) => sum + getMultipliedScore(m.company_value, m.total_score), 0);
     
-    // // Background bar dengan border
-    // doc.setFillColor(240, 240, 240);
-    // doc.rect(scoreBarX, currentY, scoreBarWidth, scoreBarHeight, 'F');
-    // doc.setLineWidth(0.5);
-    // doc.setDrawColor(180, 180, 180);
-    // doc.rect(scoreBarX, currentY, scoreBarWidth, scoreBarHeight);
-    
-    // // Score bar (proportional to total) dengan gradient effect
-    // const maxScore = 100; // Assumsi max score 100
-    // const scorePercentage = Math.min(total / maxScore, 1);
-    // doc.setFillColor(color[0], color[1], color[2]);
-    // doc.rect(scoreBarX + 1, currentY + 1, (scoreBarWidth - 2) * scorePercentage, scoreBarHeight - 2, 'F');
-    
-    // Score text dengan styling yang lebih baik
-    // doc.setTextColor(0, 0, 0);
-    // doc.setFontSize(18);
-    // doc.setFont('helvetica', 'bold');
-    // doc.text(`${total}`, scoreBarX + scoreBarWidth + 15, currentY + 14);
-    // doc.setFontSize(12);
-    // doc.setFont('helvetica', 'normal');
-    // doc.text('/ 100', scoreBarX + scoreBarWidth + 35, currentY + 14);
+    const getEvaluation = (total) => {
+        if (total <= 20) return { remark: "Very Poor", recommendation: "Reject", color: [220, 53, 69] };
+        if (total <= 40) return { remark: "Poor", recommendation: "Reject", color: [255, 193, 7] };
+        if (total <= 60) return { remark: "Average", recommendation: "Consideration - need comparison", color: [0, 123, 255] };
+        if (total <= 80) return { remark: "Good", recommendation: "Next Process To be Hired", color: [40, 167, 69] };
+        return { remark: "Excellent", recommendation: "Next Process To be Hired", color: [40, 167, 69] };
+    };
+
+    const { remark, recommendation, color } = getEvaluation(total);
     
     // Score percentage
     doc.setFontSize(10);
     doc.setTextColor(color[0], color[1], color[2]);
-    doc.text(`(${Math.round(total)}%)`, scoreBarX + scoreBarWidth + 50, currentY + 14);
     
     currentY += 35;
     
-    // // 2. Recommendation Section
-    // doc.setFillColor(color[0], color[1], color[2]);
-    // doc.rect(20, currentY, pageWidth - 40, 12, 'F');
-    
-    // doc.setTextColor(255, 255, 255);
-    // doc.setFontSize(12);
-    // doc.setFont('helvetica', 'bold');
-    // doc.text('RECOMMENDATION', 25, currentY + 8);
-    // currentY += 15;
-    
-    // // Enhanced recommendation section dengan visual indicators
-    // doc.setFillColor(248, 249, 250);
-    // doc.rect(25, currentY + 2, pageWidth - 50, 18, 'F');
-    
-    // // Border untuk recommendation box
-    // doc.setLineWidth(0.5);
-    // doc.setDrawColor(color[0], color[1], color[2]);
-    // doc.rect(25, currentY + 2, pageWidth - 50, 18);
-    
-    // // Rating stars berdasarkan total score
-    // let iconSymbol = "";
-    // if (total >= 80) iconSymbol = "★★★★★"; // 5 stars
-    // else if (total >= 60) iconSymbol = "★★★★☆"; // 4 stars
-    // else if (total >= 40) iconSymbol = "★★★☆☆"; // 3 stars
-    // else if (total >= 20) iconSymbol = "★★☆☆☆"; // 2 stars
-    // else iconSymbol = "★☆☆☆☆"; // 1 star
-    
-    // doc.setTextColor(255, 193, 7); // Gold color untuk stars
-    // doc.setFontSize(12);
-    // doc.text(iconSymbol, 30, currentY + 8);
-    
-    // doc.setTextColor(0, 0, 0);
-    // doc.setFontSize(11);
-    // doc.setFont('helvetica', 'normal');
-    // doc.text(`Overall Rating: ${remark}`, 30, currentY + 15);
-    // currentY += 8;
-    // doc.setTextColor(color[0], color[1], color[2]);
-    // doc.setFont('helvetica', 'bold');
-    // doc.text(`Recommendation: ${recommendation}`, 30, currentY + 15);
-    // currentY += 20;
-    
-    // // 3. Performance Summary Detail
-    // doc.setFillColor(2, 83, 165);
-    // doc.rect(20, currentY, pageWidth - 40, 12, 'F');
-    
-    // doc.setTextColor(255, 255, 255);
-    // doc.setFontSize(12);
-    // doc.setFont('helvetica', 'bold');
-    // doc.text('PERFORMANCE SUMMARY DETAIL', 25, currentY + 8);
-    // currentY += 18;
-    
-    // Standard values untuk comparison
+    // Standard values untuk comparison dengan urutan yang benar
     const standard_value = [
-        { "company_value": "SDT", "total_score": 40 },
+        { "company_value": "SIAH", "total_score": 40 },
+        { "company_value": "7 Values", "total_score": 60 },
         { "company_value": "CSE", "total_score": 40 },
-        { "company_value": "SIAH", "total_score": 0 },
-        { "company_value": "7 Values", "total_score": 0 }
+        { "company_value": "SDT", "total_score": 40 },
+        { "company_value": "EXPERIENCE", "total_score": 20 },
     ];
     
-    if (validMetrics.length > 0) {
-        // Table header untuk detail
+    if (sortedMetrics.length > 0) {
+        // Table header untuk detail - FULL WIDTH
         const detailRowHeight = 8;
-        const col1Width = 60;
-        const col2Width = 30;
-        const col3Width = 30;
-        const col4Width = 40;
+        const tableStartX = 0;  // Start from edge
+        const tableWidth = pageWidth;  // Full page width
+        
+        // Dynamic column widths to fill full page width
+        const col1Width = Math.floor(tableWidth * 0.35);  // 35% for Company Value
+        const col2Width = Math.floor(tableWidth * 0.2);   // 20% for Actual
+        const col3Width = Math.floor(tableWidth * 0.2);   // 20% for Target
+        const col4Width = tableWidth - col1Width - col2Width - col3Width;  // Remaining for Achievement
         
         // Enhanced table header dengan gradient effect
         doc.setFillColor(2, 83, 165); // Primary blue
-        doc.rect(20, currentY, col1Width + col2Width + col3Width + col4Width, detailRowHeight, 'F');
+        doc.rect(tableStartX, currentY, tableWidth, detailRowHeight, 'F');
         
         // Header border dengan shadow effect
         doc.setLineWidth(1);
         doc.setDrawColor(0, 51, 102); // Darker blue for border
-        doc.rect(20, currentY, col1Width + col2Width + col3Width + col4Width, detailRowHeight);
+        doc.rect(tableStartX, currentY, tableWidth, detailRowHeight);
         
         // Header text dengan better spacing
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.text('Company Value', 22, currentY + 6);
-        doc.text('Actual', 22 + col1Width + 5, currentY + 6);
-        doc.text('Target', 22 + col1Width + col2Width + 5, currentY + 6);
-        doc.text('Achievement', 22 + col1Width + col2Width + col3Width + 2, currentY + 6);
+        doc.text('Company Value', tableStartX + (col1Width / 2), currentY + 6, { align: 'center' });
+        doc.text('Actual', tableStartX + col1Width + (col2Width / 2), currentY + 6, { align: 'center' });
+        doc.text('Target', tableStartX + col1Width + col2Width + (col3Width / 2), currentY + 6, { align: 'center' });
+        doc.text('Achievement', tableStartX + col1Width + col2Width + col3Width + (col4Width / 2), currentY + 6, { align: 'center' });
         
         // Vertical separators dalam header
         doc.setLineWidth(0.5);
         doc.setDrawColor(255, 255, 255);
-        doc.line(20 + col1Width, currentY + 1, 20 + col1Width, currentY + detailRowHeight - 1);
-        doc.line(20 + col1Width + col2Width, currentY + 1, 20 + col1Width + col2Width, currentY + detailRowHeight - 1);
-        doc.line(20 + col1Width + col2Width + col3Width, currentY + 1, 20 + col1Width + col2Width + col3Width, currentY + detailRowHeight - 1);
+        doc.line(tableStartX + col1Width, currentY + 1, tableStartX + col1Width, currentY + detailRowHeight - 1);
+        doc.line(tableStartX + col1Width + col2Width, currentY + 1, tableStartX + col1Width + col2Width, currentY + detailRowHeight - 1);
+        doc.line(tableStartX + col1Width + col2Width + col3Width, currentY + 1, tableStartX + col1Width + col2Width + col3Width, currentY + detailRowHeight - 1);
         
         currentY += detailRowHeight;
         
-        validMetrics.forEach((metric, index) => {
+        sortedMetrics.forEach((metric, index) => {
             const standard = standard_value.find(s => s.company_value === metric.company_value);
             const standardScore = standard ? standard.total_score : 0;
-            const percentage = standardScore === 0 ? 100 : Math.round((metric.total_score / standardScore) * 100);
+            const multipliedScore = getMultipliedScore(metric.company_value, metric.total_score);
+            const percentage = standardScore === 0 ? 100 : Math.round((multipliedScore / standardScore) * 100);
             
             // Enhanced alternating row colors dengan subtle gradients
             let rowBgColor;
@@ -656,12 +720,12 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             
             // Row background dengan subtle border
             doc.setFillColor(rowBgColor[0], rowBgColor[1], rowBgColor[2]);
-            doc.rect(20, currentY, col1Width + col2Width + col3Width + col4Width, detailRowHeight, 'F');
+            doc.rect(tableStartX, currentY, tableWidth, detailRowHeight, 'F');
             
             // Row border dengan subtle color
             doc.setLineWidth(0.2);
             doc.setDrawColor(230, 230, 230);
-            doc.rect(20, currentY, col1Width + col2Width + col3Width + col4Width, detailRowHeight);
+            doc.rect(tableStartX, currentY, tableWidth, detailRowHeight);
             
             // Cell content dengan better alignment
             doc.setTextColor(0, 0, 0);
@@ -671,19 +735,17 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             // Company Value dengan emphasis
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(2, 83, 165); // Corporate blue
-            doc.text(metric.company_value, 22, currentY + 6);
+            doc.text(metric.company_value, tableStartX + (col1Width / 2), currentY + 6, { align: 'center' });
             
-            // Actual Score dengan center alignment
+            // Actual Score dengan center alignment (multiplied score)
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
-            const actualText = metric.total_score.toString();
-            const actualWidth = doc.getTextWidth(actualText);
-            doc.text(actualText, 20 + col1Width + (col2Width - actualWidth) / 2, currentY + 6);
+            const actualText = Math.round(multipliedScore).toString();
+            doc.text(actualText, tableStartX + col1Width + (col2Width / 2), currentY + 6, { align: 'center' });
             
             // Target Score dengan center alignment
             const targetText = standardScore.toString();
-            const targetWidth = doc.getTextWidth(targetText);
-            doc.text(targetText, 20 + col1Width + col2Width + (col3Width - targetWidth) / 2, currentY + 6);
+            doc.text(targetText, tableStartX + col1Width + col2Width + (col3Width / 2), currentY + 6, { align: 'center' });
             
             // Achievement color based on performance
             let achievementColor = [220, 53, 69]; // Red for poor
@@ -691,9 +753,9 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             else if (percentage >= 60) achievementColor = [255, 193, 7]; // Yellow for average
             
             // Achievement percentage dengan enhanced progress bar mini
-            const achievementBarWidth = 25;
+            const achievementBarWidth = Math.floor(col4Width * 0.6); // 60% of achievement column width
             const achievementBarHeight = 4;
-            const achievementBarX = 22 + col1Width + col2Width + col3Width + 2;
+            const achievementBarX = tableStartX + col1Width + col2Width + col3Width + (col4Width - achievementBarWidth) / 2;
             const achievementBarY = currentY + 2;
             
             // Background bar dengan border
@@ -712,50 +774,57 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             doc.setTextColor(achievementColor[0], achievementColor[1], achievementColor[2]);
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(7);
-            doc.text(`${percentage}%`, achievementBarX + achievementBarWidth + 2, currentY + 6);
+            doc.text(`${percentage}%`, achievementBarX + achievementBarWidth + 3, currentY + 6);
             
             // Vertical separators untuk cell consistency
             doc.setLineWidth(0.2);
             doc.setDrawColor(220, 220, 220);
-            doc.line(20 + col1Width, currentY, 20 + col1Width, currentY + detailRowHeight);
-            doc.line(20 + col1Width + col2Width, currentY, 20 + col1Width + col2Width, currentY + detailRowHeight);
-            doc.line(20 + col1Width + col2Width + col3Width, currentY, 20 + col1Width + col2Width + col3Width, currentY + detailRowHeight);
+            doc.line(tableStartX + col1Width, currentY, tableStartX + col1Width, currentY + detailRowHeight);
+            doc.line(tableStartX + col1Width + col2Width, currentY, tableStartX + col1Width + col2Width, currentY + detailRowHeight);
+            doc.line(tableStartX + col1Width + col2Width + col3Width, currentY, tableStartX + col1Width + col2Width + col3Width, currentY + detailRowHeight);
             
             // Borders untuk final row consistency
             doc.setLineWidth(0.1);
             doc.setDrawColor(200, 200, 200);
-            doc.rect(20, currentY, col1Width, detailRowHeight);
-            doc.rect(20 + col1Width, currentY, col2Width, detailRowHeight);
-            doc.rect(20 + col1Width + col2Width, currentY, col3Width, detailRowHeight);
-            doc.rect(20 + col1Width + col2Width + col3Width, currentY, col4Width, detailRowHeight);
+            doc.rect(tableStartX, currentY, col1Width, detailRowHeight);
+            doc.rect(tableStartX + col1Width, currentY, col2Width, detailRowHeight);
+            doc.rect(tableStartX + col1Width + col2Width, currentY, col3Width, detailRowHeight);
+            doc.rect(tableStartX + col1Width + col2Width + col3Width, currentY, col4Width, detailRowHeight);
             
             currentY += detailRowHeight;
         });
         
         // Summary footer untuk tabel
         doc.setFillColor(2, 83, 165); // Corporate blue
-        doc.rect(20, currentY, col1Width + col2Width + col3Width + col4Width, detailRowHeight, 'F');
+        doc.rect(tableStartX, currentY, tableWidth, detailRowHeight, 'F');
         
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.text('OVERALL TOTAL', 22, currentY + 6);
+        doc.text('OVERALL TOTAL', tableStartX + (col1Width / 2), currentY + 6, { align: 'center' });
         
-        const overallActual = validMetrics.reduce((sum, m) => sum + m.total_score, 0);
-        const overallTarget = validMetrics.reduce((sum, m) => {
+        const overallActual = sortedMetrics.reduce((sum, m) => sum + getMultipliedScore(m.company_value, m.total_score), 0);
+        const overallTarget = sortedMetrics.reduce((sum, m) => {
             const standard = standard_value.find(s => s.company_value === m.company_value);
             return sum + (standard ? standard.total_score : 0);
         }, 0);
         const overallPercentage = overallTarget === 0 ? 100 : Math.round((overallActual / overallTarget) * 100);
         
-        doc.text(overallActual.toString(), 20 + col1Width + (col2Width / 2), currentY + 6);
-        doc.text(overallTarget.toString(), 20 + col1Width + col2Width + (col3Width / 2), currentY + 6);
-        doc.text(`${overallPercentage}%`, 20 + col1Width + col2Width + col3Width + (col4Width / 2), currentY + 6);
+        doc.text(Math.round(overallActual).toString(), tableStartX + col1Width + (col2Width / 2), currentY + 6, { align: 'center' });
+        doc.text(overallTarget.toString(), tableStartX + col1Width + col2Width + (col3Width / 2), currentY + 6, { align: 'center' });
+        doc.text(`${overallPercentage}%`, tableStartX + col1Width + col2Width + col3Width + (col4Width / 2), currentY + 6, { align: 'center' });
         
         currentY += detailRowHeight;
     }
     
-    return currentY + 15;
+    // Return total and evaluation for chart card
+    return { 
+        nextY: currentY + 15, 
+        total: Math.round(total), 
+        remark, 
+        recommendation, 
+        color 
+    };
 };
 
 export const generateChartImage = async (formData) => {
@@ -779,19 +848,42 @@ export const generateChartImage = async (formData) => {
         `;
         document.body.appendChild(chartContainer);
 
-        // Import Chart.js components dengan timeout
+        // Import Chart.js components dengan timeout dan better error handling
         const chartLoadPromise = import('chart.js');
         const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Chart.js loading timeout')), 15000)
         );
         
         const chartModule = await Promise.race([chartLoadPromise, timeoutPromise]);
-        const ChartJS = chartModule.Chart;
-        const { RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend } = chartModule;
         
-        ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
+        // Handle different Chart.js export patterns
+        const ChartJS = chartModule.default || chartModule.Chart || chartModule;
+        
+        // Check if Chart.js loaded properly
+        if (!ChartJS || typeof ChartJS !== 'function') {
+            throw new Error('Chart.js failed to load properly');
+        }
+        
+        // Import and register required components with error handling
+        try {
+            const { 
+                RadialLinearScale, 
+                PointElement, 
+                LineElement, 
+                Filler, 
+                Tooltip, 
+                Legend 
+            } = chartModule;
+            
+            if (RadialLinearScale && PointElement && LineElement && Filler && Tooltip && Legend) {
+                ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
+            } else {
+                console.warn('Some Chart.js components not found, using defaults');
+            }
+        } catch (registerError) {
+            console.warn('Chart.js component registration failed:', registerError);
+        }
 
-        // Prepare chart data
         const validMetrics = Array.isArray(formData.data_score) ? formData.data_score.filter(m => 
             m && 
             typeof m === 'object' && 
@@ -800,18 +892,48 @@ export const generateChartImage = async (formData) => {
         ) : [];
 
         if (validMetrics.length === 0) {
+            console.error('No valid metrics data:', formData.data_score);
             throw new Error('No valid metrics data available for chart');
         }
 
+        // Multiplier function
+        const getMultipliedScore = (companyValue, score) => {
+            switch (companyValue) {
+                case 'SIAH':
+                    return score * 2;
+                case '7 Values':
+                    return score * 1.7;
+                case 'CSE':
+                    return score * 2;
+                default:
+                    return score;
+            }
+        };
+
+        // Define desired order dan sort metrics
+        const desiredOrder = ['SIAH', '7 Values', 'CSE', 'SDT', 'EXPERIENCE'];
+        
+        const sortedMetrics = [...validMetrics].sort((a, b) => {
+            const indexA = desiredOrder.indexOf(a.company_value);
+            const indexB = desiredOrder.indexOf(b.company_value);
+            
+            // If not found in desired order, put at end
+            const orderA = indexA === -1 ? 999 : indexA;
+            const orderB = indexB === -1 ? 999 : indexB;
+            
+            return orderA - orderB;
+        });
+
         const standard_value = [
-            { "company_value": "SDT", "total_score": 40 },
+            { "company_value": "SIAH", "total_score": 40 },
+            { "company_value": "7 Values", "total_score": 60 },
             { "company_value": "CSE", "total_score": 40 },
-            { "company_value": "SIAH", "total_score": 0 },
-            { "company_value": "7 Values", "total_score": 0 }
+            { "company_value": "SDT", "total_score": 40 },
+            { "company_value": "EXPERIENCE", "total_score": 20 }
         ];
 
-        const companyValues = validMetrics.map(m => m.company_value);
-        const actualScores = validMetrics.map(m => m.total_score);
+        const companyValues = sortedMetrics.map(m => m.company_value);
+        const actualScores = sortedMetrics.map(m => getMultipliedScore(m.company_value, m.total_score));
         const standardScores = companyValues.map(companyValue => {
             const standardItem = standard_value.find(item => item.company_value === companyValue);
             return standardItem ? standardItem.total_score : 0;
@@ -823,7 +945,7 @@ export const generateChartImage = async (formData) => {
         canvas.height = 350;
         chartContainer.appendChild(canvas);
 
-        // Create chart
+        // Create chart dengan better error handling
         chart = new ChartJS(canvas, {
             type: 'radar',
             data: {
@@ -861,6 +983,9 @@ export const generateChartImage = async (formData) => {
             options: {
                 responsive: false,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 0 // Disable animation for faster rendering
+                },
                 plugins: {
                     legend: {
                         position: 'top',
@@ -893,34 +1018,125 @@ export const generateChartImage = async (formData) => {
             }
         });
 
-        // Wait for chart to render dengan timeout
-        await Promise.race([
-            new Promise((resolve) => setTimeout(resolve, 2000)),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Chart render timeout')), 5000))
-        ]);
+        // Verify chart was created successfully
+        if (!chart) {
+            throw new Error('Chart creation failed');
+        }
+
+        // Wait for chart to render dengan extended timeout dan multiple checks
+        await new Promise((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 20;
+            const checkInterval = 200;
+            
+            const checkRender = () => {
+                attempts++;
+                
+                // Check if chart is rendered by looking at canvas state
+                if (chart && chart.canvas && chart.canvas.getContext) {
+                    const ctx = chart.canvas.getContext('2d');
+                    const imageData = ctx.getImageData(0, 0, 10, 10);
+                    const hasContent = imageData.data.some(value => value !== 0);
+                    
+                    if (hasContent || attempts >= maxAttempts) {
+                        resolve();
+                        return;
+                    }
+                }
+                
+                if (attempts >= maxAttempts) {
+                    console.warn('Chart render timeout after maximum attempts');
+                    resolve(); // Continue anyway
+                    return;
+                }
+                
+                setTimeout(checkRender, checkInterval);
+            };
+            
+            // Start checking after initial delay
+            setTimeout(checkRender, 500);
+            
+            // Absolute timeout
+            setTimeout(() => {
+                console.warn('Chart render absolute timeout');
+                resolve();
+            }, 10000);
+        });
         
-        // Convert to image dengan timeout
+        
         const canvasImagePromise = html2canvas(chartContainer, {
             backgroundColor: 'white',
             scale: 2,
             useCORS: true,
             allowTaint: true,
             foreignObjectRendering: false,
-            timeout: 10000
+            timeout: 15000,
+            logging: false, // Reduce console noise
+            width: chartContainer.offsetWidth,
+            height: chartContainer.offsetHeight
         });
         
         const canvasTimeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Canvas conversion timeout')), 15000)
+            setTimeout(() => reject(new Error('Canvas conversion timeout')), 20000)
         );
         
         const canvasImage = await Promise.race([canvasImagePromise, canvasTimeoutPromise]);
-        const imageData = canvasImage.toDataURL('image/png');
+        
+        if (!canvasImage) {
+            throw new Error('Canvas conversion returned null');
+        }
+        
+        const imageData = canvasImage.toDataURL('image/png', 1.0);
+        
+        if (!imageData || imageData.length < 100) {
+            throw new Error('Generated image data is invalid or empty');
+        }
         
         return imageData;
 
     } catch (error) {
         console.error('Error generating chart image:', error);
-        return null;
+        console.error('FormData received:', formData);
+        console.error('Data score structure:', formData.data_score);
+        
+        // Try to create a simple fallback chart using canvas directly
+        try {
+            
+            const fallbackCanvas = document.createElement('canvas');
+            fallbackCanvas.width = 500;
+            fallbackCanvas.height = 350;
+            const ctx = fallbackCanvas.getContext('2d');
+            
+            // Simple fallback visualization
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, 500, 350);
+            
+            ctx.fillStyle = 'black';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Performance Chart', 250, 50);
+            
+            ctx.font = '12px Arial';
+            ctx.fillText('Chart generation failed', 250, 100);
+            ctx.fillText('Error: ' + error.message, 250, 120);
+            
+            // Draw a simple placeholder chart
+            ctx.strokeStyle = 'rgba(54, 162, 235, 1)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(250, 200, 80, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            ctx.fillStyle = 'rgba(54, 162, 235, 0.3)';
+            ctx.fill();
+            
+            const fallbackImageData = fallbackCanvas.toDataURL('image/png');
+            return fallbackImageData;
+            
+        } catch (fallbackError) {
+            console.error('Fallback chart also failed:', fallbackError);
+            return null;
+        }
     } finally {
         // Cleanup dengan safety checks
         try {
@@ -942,17 +1158,14 @@ export const generateChartImage = async (formData) => {
 };
 
 export const generateCandidateInfoTable = (doc, formData, yPosition) => {
-    // Selalu gunakan manual table untuk konsistensi
     return generateManualTable(doc, formData, yPosition);
 };
 
 export const generateAssessmentTable = (doc, formData, yPosition) => {
-    // Selalu gunakan manual table untuk assessment dengan rowspan
     return generateManualAssessmentTable(doc, formData, yPosition);
 };
 
 export const generateSummaryTable = (doc, formData, yPosition) => {
-    // Fallback jika autoTable tidak tersedia
     if (typeof doc.autoTable !== 'function') {
         console.warn('autoTable not available for summary table, using text format');
         return generateSummaryText(doc, formData, yPosition);
@@ -984,10 +1197,11 @@ export const generateSummaryTable = (doc, formData, yPosition) => {
     ];
 
     const standard_value = [
+        { "company_value": "SIAH", "total_score": 40 },
+        { "company_value": "7 Values", "total_score": 60 },
         { "company_value": "SDT", "total_score": 40 },
         { "company_value": "CSE", "total_score": 40 },
-        { "company_value": "SIAH", "total_score": 0 },
-        { "company_value": "7 Values", "total_score": 0 }
+        { "company_value": "EXPERIENCE", "total_score": 20 }
     ];
 
     if (validMetrics.length > 0) {
@@ -1084,51 +1298,133 @@ export const generatePDF = async (formData) => {
 
         yPosition = generateAssessmentTable(doc, formData, yPosition);
 
+        // Check if we need new page for chart section
+        if (yPosition > pageHeight - 120) {
+            doc.addPage();
+            yPosition = 20;
+        }
+
+        let scoreResult = null;
+        
+        try {
+            const chartPromise = generateChartImage(formData);
+            const chartTimeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Chart generation timeout')), 45000)
+            );
+            
+            const chartImage = await Promise.race([chartPromise, chartTimeoutPromise]);
+            
+            // Generate scoreResult for card data
+            scoreResult = generateScoreResultForCard(formData);
+            
+            if (chartImage && chartImage.length > 100) {
+                // Chart dan Card side by side
+                const chartWidth = 110;
+                const chartHeight = 80;
+                const chartX = 20;
+
+                // Card di sebelah kanan chart
+                const cardX = chartX + chartWidth + 15;
+                const cardY = yPosition;
+                const cardWidth = 50;
+                const cardHeight = 80;
+
+                // Background card dengan border
+                doc.setFillColor(248, 249, 250);
+                doc.rect(cardX, cardY, cardWidth, cardHeight, 'F');
+                doc.setLineWidth(0.5);
+                doc.setDrawColor(200, 200, 200);
+                doc.rect(cardX, cardY, cardWidth, cardHeight);
+
+                // Total Score di center atas card
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('TOTAL', cardX + (cardWidth / 2), cardY + 15, { align: 'center' });
+
+                // Total value dengan ukuran besar
+                doc.setFontSize(24);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(scoreResult.color[0], scoreResult.color[1], scoreResult.color[2]);
+                doc.text(scoreResult.total.toString(), cardX + (cardWidth / 2), cardY + 30, { align: 'center' });
+
+                // Remark di bawah total
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(0, 0, 0);
+                doc.text(scoreResult.remark, cardX + (cardWidth / 2), cardY + 45, { align: 'center' });
+
+                // Text "Recommendation" 
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Recommendation:', cardX + (cardWidth / 2), cardY + 55, { align: 'center' });
+
+                // Recommendation text dengan word wrap
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(scoreResult.color[0], scoreResult.color[1], scoreResult.color[2]);
+                const wrappedRecommendation = doc.splitTextToSize(scoreResult.recommendation, cardWidth - 4);
+                let recY = cardY + 62;
+                wrappedRecommendation.forEach((line, index) => {
+                    doc.text(line, cardX + (cardWidth / 2), recY + (index * 4), { align: 'center' });
+                });
+
+                // Chart image
+                doc.addImage(chartImage, 'PNG', chartX, yPosition, chartWidth, chartHeight);
+                yPosition += chartHeight + 10;
+                
+            } else {
+                console.warn('Chart generation failed or returned invalid data, showing summary card only');
+                const cardX = 20;
+                const cardY = yPosition;
+                const cardWidth = 80;
+                const cardHeight = 60;
+
+                doc.setFillColor(248, 249, 250);
+                doc.rect(cardX, cardY, cardWidth, cardHeight, 'F');
+                doc.setLineWidth(0.5);
+                doc.setDrawColor(200, 200, 200);
+                doc.rect(cardX, cardY, cardWidth, cardHeight);
+
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('ASSESSMENT SUMMARY', cardX + (cardWidth / 2), cardY + 15, { align: 'center' });
+
+                doc.setFontSize(18);
+                doc.setTextColor(scoreResult.color[0], scoreResult.color[1], scoreResult.color[2]);
+                doc.text(`Total: ${scoreResult.total}`, cardX + (cardWidth / 2), cardY + 30, { align: 'center' });
+
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Rating: ${scoreResult.remark}`, cardX + (cardWidth / 2), cardY + 42, { align: 'center' });
+
+                // Add note about chart failure
+                doc.setFontSize(8);
+                doc.setTextColor(220, 53, 69);
+                doc.text('(Chart generation failed)', cardX + (cardWidth / 2), cardY + 52, { align: 'center' });
+
+                yPosition += cardHeight + 10;
+            }
+        } catch (chartError) {
+            console.error('Chart generation failed with error:', chartError);
+            // Continue without chart but add error message
+            doc.setTextColor(220, 53, 69);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Chart generation failed: ' + chartError.message, 20, yPosition);
+            yPosition += 15;
+        }
+
         // Check if we need new page for comprehensive score section
         if (yPosition > pageHeight - 100) {
             doc.addPage();
             yPosition = 20;
         }
 
-        // Comprehensive Score Section
-        yPosition = generateComprehensiveScoreSection(doc, formData, yPosition);
-
-        // Performance Chart Section dengan optional chart
-        try {
-            const chartPromise = generateChartImage(formData);
-            const chartTimeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Chart generation timeout')), 30000)
-            );
-            
-            const chartImage = await Promise.race([chartPromise, chartTimeoutPromise]);
-            
-            if (chartImage) {
-                if (yPosition > pageHeight - 120) {
-                    doc.addPage();
-                    yPosition = 20;
-                }
-
-                // doc.setFillColor(2, 83, 165);
-                // doc.rect(20, yPosition, pageWidth - 40, 12, 'F');
-                // doc.setTextColor(255, 255, 255);
-                // doc.setFontSize(12);
-                // doc.setFont('helvetica', 'bold');
-                // doc.text('PERFORMANCE RADAR CHART', 25, yPosition + 8);
-                // yPosition += 18;
-
-                const chartWidth = 160;
-                const chartHeight = 100;
-                const chartX = (pageWidth - chartWidth) / 2;
-
-                doc.addImage(chartImage, 'PNG', chartX, yPosition, chartWidth, chartHeight);
-                yPosition += chartHeight + 10;
-                
-            } else {
-            }
-        } catch (chartError) {
-            console.warn('Chart generation failed:', chartError);
-            // Continue without chart
-        }
+        // Comprehensive Score Section (Performance Summary Table)
+        const comprehensiveResult = generateComprehensiveScoreSection(doc, formData, yPosition);
+        yPosition = comprehensiveResult.nextY;
 
         // Footer
         doc.setFontSize(8);
@@ -1184,7 +1480,6 @@ export const downloadInterviewPDF = async (formData) => {
     } catch (error) {
         console.error('Download PDF failed:', error);
         
-        // Jika error karena library loading, reset cache dan coba lagi sekali
         if (error.message.includes('Library') || error.message.includes('timeout')) {
             resetLibrariesCache();
             

@@ -20,6 +20,14 @@ export const InterviewScoreChart = ({ metrics = [] }) => {
     const standard_value = [
         [
             {
+                "company_value": "SIAH",
+                "total_score": 40
+            },
+            {
+                "company_value": "7 Values",
+                "total_score": 60
+            },
+            {
                 "company_value": "SDT",
                 "total_score": 40
             },
@@ -28,12 +36,8 @@ export const InterviewScoreChart = ({ metrics = [] }) => {
                 "total_score": 40
             },
             {
-                "company_value": "SIAH",
-                "total_score": 0
-            },
-            {
-                "company_value": "7 Values",
-                "total_score": 0
+                "company_value": "EXPERIENCE",
+                "total_score": 20
             }
         ]
     ]
@@ -47,11 +51,40 @@ export const InterviewScoreChart = ({ metrics = [] }) => {
         );
     }
 
-    // Prepare data for chart first
-    const companyValues = validMetrics.map(m => m.company_value);
-    const actualScores = validMetrics.map(m => m.total_score);
+    // Apply multipliers to specific company values
+    const getMultipliedScore = (companyValue, score) => {
+        switch (companyValue) {
+            case 'SIAH':
+                return score * 2;
+            case '7 Values':
+                return score * 1.7;
+            case 'CSE':
+                return score * 2;
+            default:
+                return score;
+        }
+    };
+
+    // Define the desired order for Performance Summary
+    const desiredOrder = ['SIAH', '7 Values', 'CSE', 'SDT', 'EXPERIENCE'];
     
-    // Get standard values in the same order as metrics
+    // Sort metrics according to desired order
+    const sortedMetrics = [...validMetrics].sort((a, b) => {
+        const indexA = desiredOrder.indexOf(a.company_value);
+        const indexB = desiredOrder.indexOf(b.company_value);
+        
+        // If not found in desired order, put at end
+        const orderA = indexA === -1 ? 999 : indexA;
+        const orderB = indexB === -1 ? 999 : indexB;
+        
+        return orderA - orderB;
+    });
+
+    // Prepare data for chart
+    const companyValues = sortedMetrics.map(m => m.company_value);
+    const actualScores = sortedMetrics.map(m => getMultipliedScore(m.company_value, m.total_score));
+    
+    // Get standard values in the same order as sorted metrics
     const standardScores = companyValues.map(companyValue => {
         const standardItem = standard_value[0].find(item => item.company_value === companyValue);
         return standardItem ? standardItem.total_score : 0;
@@ -72,13 +105,24 @@ export const InterviewScoreChart = ({ metrics = [] }) => {
                 }
             },
             tooltip: {
+                mode: 'point',
+                intersect: false,
                 callbacks: {
+                    beforeBody: function(tooltipItems) {
+                        if (tooltipItems.length > 0) {
+                            const companyValue = tooltipItems[0].label;
+                            return [`Company Value: ${companyValue}`];
+                        }
+                        return [];
+                    },
                     label: function(context) {
                         const datasetLabel = context.dataset.label;
                         const value = context.parsed.r;
                         const companyValue = context.label;
                         
-                        if (datasetLabel === 'Actual Score') {
+                        if (datasetLabel === 'Standard Target') {
+                            return `${datasetLabel}: ${value}`;
+                        } else if (datasetLabel === 'Actual Score') {
                             const standardIndex = companyValues.indexOf(companyValue);
                             const standard = standardScores[standardIndex];
                             // Jika standard adalah 0, maka persentase adalah 100%
@@ -88,6 +132,31 @@ export const InterviewScoreChart = ({ metrics = [] }) => {
                         } else {
                             return `${datasetLabel}: ${value}`;
                         }
+                    },
+                    afterBody: function(tooltipItems) {
+                        if (tooltipItems.length > 0) {
+                            const companyValue = tooltipItems[0].label;
+                            const standardIndex = companyValues.indexOf(companyValue);
+                            const actualScore = actualScores[standardIndex];
+                            const standardScore = standardScores[standardIndex];
+                            
+                            if (standardScore > 0) {
+                                const percentage = Math.round((actualScore / standardScore) * 100);
+                                const gap = actualScore - standardScore;
+                                const gapText = gap >= 0 ? `+${gap}` : `${gap}`;
+                                return [
+                                    ``,
+                                    `Performance Gap: ${gapText} points`,
+                                    `Achievement: ${percentage}% of target`
+                                ];
+                            } else {
+                                return [
+                                    ``,
+                                    `No target set for this metric`
+                                ];
+                            }
+                        }
+                        return [];
                     }
                 }
             }
@@ -121,7 +190,7 @@ export const InterviewScoreChart = ({ metrics = [] }) => {
         }
     };
 
-    const total = validMetrics.reduce((sum, m) => sum + m.total_score, 0);
+    const total = sortedMetrics.reduce((sum, m) => sum + getMultipliedScore(m.company_value, m.total_score), 0);
 
     const getEvaluation = (total) => {
         if (total <= 20) return { remark: "Very Poor", recommendation: "Reject" };

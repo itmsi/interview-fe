@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Form, Badge, Table, Container } from 'react-bootstrap';
-import { FaPlus, FaUserCheck, FaUserTimes, FaTrash, FaCalendar } from 'react-icons/fa';
+import { FaPlus, FaUserCheck, FaUserTimes, FaTrash, FaCalendar, FaFilePdf, FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { apiGet, apiPost, apiDelete, Tooltips } from '../../Helper/Helper';
+import { apiGet, apiPost, apiDelete, apiPostFormData, Tooltips } from '../../Helper/Helper';
 import { Popup } from '../../Component/Popup';
 import { AnimatedLoadingSpinner } from '../../Helper/Helper';
 
 export const BackgroundCheck = ({ 
     infoCandidate, 
     loginInfo, 
-    token, 
+    system,
+    token,
     endpoint, 
     isActive = false 
 }) => {
@@ -24,7 +25,8 @@ export const BackgroundCheck = ({
     // Form state
     const [form, setForm] = useState({
         status: 'hired', // 'hired' or 'rejected'
-        notes: ''
+        notes: '',
+        file_attachment: null
     });
 
     // Fetch background checks from API
@@ -69,6 +71,31 @@ export const BackgroundCheck = ({
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
+    // Handle file upload change
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type (PDF only)
+            if (file.type !== 'application/pdf') {
+                toast.error('Please select a PDF file only');
+                e.target.value = ''; // Clear the input
+                return;
+            }
+            
+            // Validate file size (max 10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSize) {
+                toast.error('File size must be less than 10MB');
+                e.target.value = ''; // Clear the input
+                return;
+            }
+            
+            setForm(prev => ({ ...prev, file_attachment: file }));
+        } else {
+            setForm(prev => ({ ...prev, file_attachment: null }));
+        }
+    };
+
     // Handle status switch change
     const handleStatusChange = (e) => {
         const status = e.target.checked ? 'hired' : 'rejected';
@@ -84,18 +111,22 @@ export const BackgroundCheck = ({
 
         setSubmitting(true);
         try {
-            const checkData = {
-                candidate_id: candidateId,
-                background_check_reject: form.status === 'rejected',
-                background_check_note: form.notes,
-                create_by: loginInfo?.employee?.name || 'tidak dikenal'
-            };
+            const formData = new FormData();
+            formData.append('candidate_id', candidateId);
+            formData.append('background_check_reject', form.status === 'rejected');
+            formData.append('background_check_note', form.notes);
+            formData.append('create_by', loginInfo?.employee?.name || 'tidak dikenal');
+            
+            // Add file if selected
+            if (form.file_attachment) {
+                formData.append('file_attachment', form.file_attachment);
+            }
 
-            await apiPost(endpoint, '/background-check', token, checkData);
+            await apiPostFormData(endpoint, '/background-check/multipart', token, formData);
             
             toast.success('Background check added successfully!');
             setShowAddModal(false);
-            setForm({ status: 'hired', notes: '' });
+            setForm({ status: 'hired', notes: '', file_attachment: null });
             fetchBackgroundChecks(); // Refresh the list
             
         } catch (error) {
@@ -163,6 +194,7 @@ export const BackgroundCheck = ({
         return <AnimatedLoadingSpinner text="background checks" />;
     }
 
+    const roleName = system?.roles?.[0]?.role_name;
     return (
         <Container className="p-0">
             <Button 
@@ -189,6 +221,7 @@ export const BackgroundCheck = ({
                             <Table hover className="mb-0">
                                 <thead className="bg-light">
                                     <tr>
+                                        <th></th>
                                         <th>Notes</th>
                                         <th>Created By</th>
                                         <th>Date</th>
@@ -199,6 +232,9 @@ export const BackgroundCheck = ({
                                 <tbody>
                                     {backgroundChecks.map((check, index) => (
                                         <tr key={index}>
+                                            <td valign="middle">
+                                                <FaFilePdf className="text-danger fs-5" />
+                                            </td>
                                             <td valign='middle'>
                                                 <p className="mb-0 text-wrap" style={{ maxWidth: '300px' }}>
                                                     {check.background_check_note}
@@ -219,16 +255,36 @@ export const BackgroundCheck = ({
                                                 {getStatusBadge(check.background_check_reject)}
                                             </td>
                                             <td valign='middle' className="text-center">
-                                                <Tooltips title={"Delete background check"} position="top">
-                                                    <Button
-                                                        variant="outline-danger"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteConfirm(check)}
-                                                        title="Delete"
-                                                    >
-                                                        <FaTrash />
-                                                    </Button>
-                                                </Tooltips>
+                                                <div className="d-flex align-items-center gap-2 justify-content-center">
+                                                    {check.file_attachment ? (
+                                                        <Tooltips title={"Download Attachment"} position="top">
+                                                            <Button
+                                                                variant="outline-primary"
+                                                                size="sm"
+                                                                onClick={() => window.open(check.file_attachment, '_blank')}
+                                                                className="w-50"
+                                                                title="Download PDF"
+                                                            >
+                                                                <FaDownload size={12} />
+                                                            </Button>
+                                                        </Tooltips>
+                                                    ) : (
+                                                        <span className="text-muted">No attachment</span>
+                                                    )}
+                                                    {roleName && roleName.toLowerCase() === 'hr' && (
+                                                        <Tooltips title={"Delete Background Check"} position="top">
+                                                            <Button
+                                                                variant="outline-danger"
+                                                                size="sm"
+                                                                onClick={() => handleDeleteConfirm(check)}
+                                                                className="w-50"
+                                                                title="Delete"
+                                                            >
+                                                                <FaTrash />
+                                                            </Button>
+                                                        </Tooltips>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -246,7 +302,7 @@ export const BackgroundCheck = ({
                 size="md"
                 onHide={() => {
                     setShowAddModal(false);
-                    setForm({ status: 'hired', notes: '' });
+                    setForm({ status: 'hired', notes: '', file_attachment: null });
                 }}
                 onConfirm={handleAdd}
                 titleConfirm={submitting ? "Adding..." : "Add Check"}
@@ -263,6 +319,7 @@ export const BackgroundCheck = ({
                                     Rejected
                                 </span>
                             </div>
+
                             <Form.Check 
                                 type="switch"
                                 id="status-switch"
@@ -295,6 +352,29 @@ export const BackgroundCheck = ({
                         <Form.Text className="text-muted">
                             Provide detailed information about the background check results.
                         </Form.Text>
+                    </Form.Group>
+
+                    {/* File Attachment */}
+                    <Form.Group className="mb-3">
+                        <Form.Label>Attachment (PDF)</Form.Label>
+                        <Form.Control
+                            type="file"
+                            name="file_attachment"
+                            accept=".pdf"
+                            onChange={handleFileChange}
+                            disabled={submitting}
+                        />
+                        <Form.Text className="text-muted">
+                            Upload background check documents (PDF only, max 10MB)
+                        </Form.Text>
+                        {form.file_attachment && (
+                            <div className="mt-2 p-2 bg-light rounded d-flex align-items-center gap-2">
+                                <FaFilePdf className="text-danger" />
+                                <span className="text-dark small">
+                                    Selected: {form.file_attachment.name} ({(form.file_attachment.size / 1024 / 1024).toFixed(2)} MB)
+                                </span>
+                            </div>
+                        )}
                     </Form.Group>
                 </Form>
             </Popup>

@@ -44,9 +44,10 @@ export const CanvasFormInterview = ({
                     system={system}
                     editingFormData={editingFormData}
                     isEditMode={isEditMode}
+                    onClose={() => onHide()}
                     onSaveSuccess={() => {
                         if (onSaveSuccess) onSaveSuccess();
-                        onHide(); // Tutup offcanvas
+                        // onHide(); // Tutup offcanvas
                     }}
                 />
 
