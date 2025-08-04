@@ -47,7 +47,7 @@ export const CanvasFormInterview = ({
                     onClose={() => onHide()}
                     onSaveSuccess={() => {
                         if (onSaveSuccess) onSaveSuccess();
-                        // onHide(); // Tutup offcanvas
+                        onHide(); // Tutup offcanvas
                     }}
                 />
 

@@ -11,15 +11,33 @@ export const usePDFDownload = () => {
             return;
         }
 
+        setIsGenerating(true);
+
+        const pdfPromise = downloadInterviewPDF(formData);
+
+        toast.promise(
+            pdfPromise,
+            {
+                pending: 'Generating PDF report...',
+                success: {
+                    render() {
+                        return 'PDF downloaded successfully!';
+                    },
+                    autoClose: 3000,
+                },
+                error: {
+                    render({data}) {
+                        console.error('Error downloading PDF:', data);
+                        return `Failed to download PDF: ${data?.message || 'Unknown error'}`;
+                    }
+                }
+            }
+        );
+
         try {
-            setIsGenerating(true);
-            toast.info('Generating PDF report...', { autoClose: 2000 });
-            
-            await downloadInterviewPDF(formData);
-            
+            await pdfPromise;
         } catch (error) {
-            console.error('Error downloading PDF:', error);
-            toast.error('Failed to download PDF: ' + error.message);
+            // Error sudah ditangani oleh toast.promise
         } finally {
             setIsGenerating(false);
         }

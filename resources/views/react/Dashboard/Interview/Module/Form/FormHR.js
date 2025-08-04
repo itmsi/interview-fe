@@ -335,6 +335,18 @@ const QuestionSDT = ({
     const [errors, setErrors] = useState({});
     const [selectedAspect, setSelectedAspect] = useState('');
 
+    // SDT Point mapping based on aspect
+    const getSDTPoint = (aspectKey) => {
+        const pointMapping = {
+            'l2': 20, // L2 (External Regulation – Driven by rewards or punishments ( not ideal)
+            'l3': 25, // L3 (Self - Involment and focus on self and other evaluation)
+            'l4': 30, // L4 (I personally think it is important and consciously give it meaning)
+            'l5': 35, // L5 (Consistency self-integration of goals)
+            'l6': 40  // L6 (Interest, happiness, self-satisfaction)
+        };
+        return pointMapping[aspectKey] || 0;
+    };
+
     // Initialize data from editing mode or from form prop
     useEffect(() => {
         if (isEditMode && editingFormData && editingFormData.interview) {
@@ -352,7 +364,7 @@ const QuestionSDT = ({
                     // Only update form if the data is different to prevent infinite loop
                     const currentFormData = form[matchingAspect.key];
                     const newFormData = {
-                        point: sdtData.score?.toString() || '',
+                        point: getSDTPoint(matchingAspect.key).toString(), // Use mapped point value
                         question: sdtData.question || '',
                         remark: sdtData.answer || ''
                     };
@@ -375,6 +387,18 @@ const QuestionSDT = ({
     const handleAspectChange = (aspectKey) => {
         setSelectedAspect(aspectKey);
         setErrors(prev => ({ ...prev, aspect: false }));
+        
+        // Auto-set point based on selected aspect
+        if (aspectKey) {
+            const pointValue = getSDTPoint(aspectKey);
+            setForm(prev => ({
+                ...prev,
+                [aspectKey]: {
+                    ...prev[aspectKey],
+                    point: pointValue.toString()
+                }
+            }));
+        }
     };
 
     const handleFieldChange = (field, value) => {
@@ -410,13 +434,6 @@ const QuestionSDT = ({
             hasErrors = true;
         }
         
-        // Validate point range
-        const pointValue = parseInt(currentData.point);
-        if (currentData.point && (!/^\d+$/.test(currentData.point) || isNaN(pointValue) || pointValue < 0 || pointValue > 40)) {
-            newErrors.point = true;
-            hasErrors = true;
-        }
-        
         setErrors(newErrors);
 
         if (hasErrors) {
@@ -424,8 +441,6 @@ const QuestionSDT = ({
                 document.getElementById('sdtAspectSelect')?.focus();
             } else if (!currentData.question?.trim()) {
                 document.getElementById('sdtQuestion')?.focus();
-            } else if (newErrors.point) {
-                document.getElementById('sdtPoint')?.focus();
             }
             return;
         }
@@ -510,37 +525,6 @@ const QuestionSDT = ({
                             </Form.Control.Feedback>
                         </FloatingLabel>
 
-                        {/* Point Selection */}
-                        <FloatingLabel controlId="sdtPoint" label="Specific point (Max 40)" className="mb-3 fs-14">
-                            <Form.Control
-                                type="text"
-                                placeholder="Enter point (0-40)"
-                                value={currentData.point || ''}
-                                onChange={e => {
-                                    const value = e.target.value;
-                                    // Only allow numbers and empty string
-                                    if (value === '' || /^\d+$/.test(value)) {
-                                        const numValue = parseInt(value);
-                                        // Only allow numbers between 0-40
-                                        if (value === '' || (numValue >= 0 && numValue <= 40)) {
-                                            handleFieldChange('point', value);
-                                        }
-                                    }
-                                }}
-                                onKeyPress={e => {
-                                    // Prevent entering non-numeric characters
-                                    if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Tab') {
-                                        e.preventDefault();
-                                    }
-                                }}
-                                disabled={!selectedAspect}
-                                isInvalid={currentData.point && (!/^\d+$/.test(currentData.point) || parseInt(currentData.point) < 0 || parseInt(currentData.point) > 40)}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                                Point must be a number between 0 and 40.
-                            </Form.Control.Feedback>
-                        </FloatingLabel>
-
                         {/* Question and Remark Fields */}
                         <Row className='gx-3'>
                             <Col lg={1}>
@@ -616,7 +600,7 @@ const QuestionSDT = ({
                         >
                             {isLoading 
                                 ? (isEditMode ? 'Updating...' : 'Saving...') 
-                                : (isEditMode ? `Update ${titleForm}` : `Savex ${titleForm}`)
+                                : (isEditMode ? `Update ${titleForm}` : `Save ${titleForm}`)
                             }
                         </Button>
                     </div>

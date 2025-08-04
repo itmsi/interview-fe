@@ -101,20 +101,20 @@ const generateManualTable = (doc, formData, yPosition) => {
     candidateInfo.forEach((row, index) => {
         if (row.length === 4) {
             
-            // Field 1 background (biru)
-            doc.setFillColor(2, 83, 165); // 0253a5 untuk label
+            // Field 1 background (navy blue yang lebih soft)
+            doc.setFillColor(2, 83, 165); // Professional dark blue
             doc.rect(posisi_x, currentY, col1Width, rowHeight, 'F');
             
-            // Value 1 background (biru muda)
-            doc.setFillColor(217, 225, 242); // D9E1F2 untuk value
+            // Value 1 background (light cream)
+            doc.setFillColor(248, 251, 255); // Very light blue-white untuk value
             doc.rect(posisi_x + col1Width, currentY, col2Width, rowHeight, 'F');
             
-            // Field 2 background (biru)
-            doc.setFillColor(2, 83, 165); // 0253a5 untuk label
+            // Field 2 background (navy blue yang lebih soft)
+            doc.setFillColor(2, 83, 165); // Professional dark blue
             doc.rect(posisi_x + col1Width + col2Width, currentY, col1Width, rowHeight, 'F');
             
-            // Value 2 background (biru muda)
-            doc.setFillColor(217, 225, 242); // D9E1F2 untuk value
+            // Value 2 background (light cream)
+            doc.setFillColor(248, 251, 255); // Very light blue-white untuk value
             doc.rect(posisi_x + col1Width + col2Width + col1Width, currentY, col2Width, rowHeight, 'F');
             
             // Text untuk field 1 (putih pada background biru)
@@ -123,40 +123,40 @@ const generateManualTable = (doc, formData, yPosition) => {
             doc.setFont('helvetica', 'bold');
             doc.text(row[0], posisi_x + 2, currentY + 5);
             
-            // Text untuk value 1 (hitam pada background biru muda)
-            doc.setTextColor(0, 0, 0);
+            // Text untuk value 1 (dark grey pada background cream)
+            doc.setTextColor(44, 62, 80); // Dark professional grey
             doc.setFont('helvetica', 'normal');
             doc.text(row[1], posisi_x + 2 + col1Width, currentY + 5);
             
-            // Text untuk field 2 (putih pada background biru)
+            // Text untuk field 2 (putih pada background navy)
             doc.setTextColor(255, 255, 255);
             doc.setFont('helvetica', 'bold');
             doc.text(row[2], posisi_x + 2 + col1Width + col2Width, currentY + 5);
             
-            // Text untuk value 2 (hitam pada background biru muda)
-            doc.setTextColor(0, 0, 0);
+            // Text untuk value 2 (dark grey pada background cream)
+            doc.setTextColor(44, 62, 80); // Dark professional grey
             doc.setFont('helvetica', 'normal');
             doc.text(row[3], posisi_x + 2 + col1Width + col2Width + col1Width, currentY + 5);
             
         } else if (row.length === 2) {
             // Row dengan 2 elemen: field, value (span full width)
             
-            // Field background (biru)
-            doc.setFillColor(2, 83, 165); // 0253a5 untuk label
+            // Field background (navy blue)
+            doc.setFillColor(2, 83, 165); // Professional dark blue
             doc.rect(posisi_x, currentY, col1Width, rowHeight, 'F');
             
-            // Value background (biru muda, span remaining width)
-            doc.setFillColor(217, 225, 242); // D9E1F2 untuk value
+            // Value background (light cream, span remaining width)
+            doc.setFillColor(248, 251, 255); // Very light blue-white untuk value
             doc.rect(posisi_x + col1Width, currentY, col2Width + col1Width + col2Width, rowHeight, 'F');
             
-            // Text untuk field (putih pada background biru)
+            // Text untuk field (putih pada background navy)
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(8);
             doc.setFont('helvetica', 'bold');
             doc.text(row[0], posisi_x + 2, currentY + 5);
             
-            // Text untuk value (hitam pada background biru muda)
-            doc.setTextColor(0, 0, 0);
+            // Text untuk value (dark grey pada background cream)
+            doc.setTextColor(44, 62, 80); // Dark professional grey
             doc.setFont('helvetica', 'normal');
             doc.text(row[1], posisi_x + 2 + col1Width, currentY + 5);
         }
@@ -164,9 +164,9 @@ const generateManualTable = (doc, formData, yPosition) => {
         currentY += rowHeight;
     });
     
-    // Draw borders dengan layout yang sesuai
-    doc.setLineWidth(0);
-    doc.setDrawColor(255, 255, 255); // Border gelap untuk kontras yang lebih baik
+    // Draw borders dengan layout yang sesuai - light gray border
+    doc.setLineWidth(0.1);
+    doc.setDrawColor(222, 226, 230); // #dee2e6 border color
     
     const tableWidth = (col1Width + col2Width) * 2;
     
@@ -190,7 +190,9 @@ const generateManualTable = (doc, formData, yPosition) => {
         }
     });
     
-    return currentY + 15;
+    // Reset after borders
+    
+    return currentY + 8;
 };
 
 // Function untuk menambahkan logo dari file atau URL
@@ -224,16 +226,17 @@ const addLogoToDoc = (doc, logoData, x, y, width, height) => {
 // Function untuk manual assessment table dengan rowspan
 const generateManualAssessmentTable = (doc, formData, yPosition) => {
     const posisi_x = 0;
-    let currentY = yPosition - 12;
+    let currentY = yPosition - 5;
     const baseRowHeight = 8;
     const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height; // Add page height for pagination
     const totalTableWidth = pageWidth - 20; // Margin 10mm each side
     
     // New column widths untuk fit paper width
-    const colCompanyWidth = 20;
+    const colCompanyWidth = 30;  // Increased from 20 to 30 for EXPERIENCE text
     const colStandardWidth = 20;
-    const colAspectWidth = 45;
-    const colQuestionWidth = 40;
+    const colAspectWidth = 40;   // Slightly reduced to accommodate company width increase
+    const colQuestionWidth = 35; // Slightly reduced to accommodate company width increase
     const colScoreWidth = 15;
     const colRemarksWidth = pageWidth - (colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth); // Sisa space untuk remarks (no gap)
     
@@ -243,12 +246,47 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
             case 'SIAH':
                 return score * 2;
             case '7 Values':
-                return score * 1.7;
+                const multipliedValue = score * 1.7;
+                // Custom rounding: >= 0.5 round up, < 0.5 round down
+                return Math.floor(multipliedValue) + (multipliedValue % 1 >= 0.5 ? 1 : 0);
             case 'CSE':
                 return score * 2;
             default:
                 return score;
         }
+    };
+    
+    // Helper function untuk draw table header
+    const drawTableHeader = (yPos) => {
+        // Header
+        doc.setFillColor(52, 73, 94); // Professional navy blue header
+        doc.rect(posisi_x, yPos, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, baseRowHeight, 'F');
+        
+        // Header text dengan better alignment
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Company', posisi_x + (colCompanyWidth / 2), yPos + 3, { align: 'center' });
+        doc.text('Value', posisi_x + (colCompanyWidth / 2), yPos + 6, { align: 'center' });
+        
+        doc.text('Standard', posisi_x + colCompanyWidth + (colStandardWidth / 2), yPos + 3, { align: 'center' });
+        doc.text('Point', posisi_x + colCompanyWidth + (colStandardWidth / 2), yPos + 6, { align: 'center' });
+        
+        doc.text('Aspect', posisi_x + colCompanyWidth + colStandardWidth + (colAspectWidth / 2), yPos + 5, { align: 'center' });
+        doc.text('Question', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + (colQuestionWidth / 2), yPos + 5, { align: 'center' });
+        doc.text('Score', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), yPos + 5, { align: 'center' });
+        doc.text('Answer/Remarks', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + (colRemarksWidth / 2), yPos + 5, { align: 'center' });
+        
+        // Header borders - light gray border
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(222, 226, 230); // #dee2e6 border color
+        doc.line(posisi_x + colCompanyWidth, yPos, posisi_x + colCompanyWidth, yPos + baseRowHeight);
+        doc.line(posisi_x + colCompanyWidth + colStandardWidth, yPos, posisi_x + colCompanyWidth + colStandardWidth, yPos + baseRowHeight);
+        doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, yPos, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, yPos + baseRowHeight);
+        doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, yPos, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, yPos + baseRowHeight);
+        doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, yPos, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, yPos + baseRowHeight);
+        
+        return yPos + baseRowHeight;
     };
     
     // Standard values untuk comparison
@@ -260,35 +298,8 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
         'EXPERIENCE': 20
     };
     
-    // Header
-    doc.setFillColor(2, 83, 165); // Header biru
-    doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, baseRowHeight, 'F');
-    
-    // Header text dengan better alignment
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(6);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Company', posisi_x + (colCompanyWidth / 2), currentY + 3, { align: 'center' });
-    doc.text('Value', posisi_x + (colCompanyWidth / 2), currentY + 6, { align: 'center' });
-    
-    doc.text('Standard', posisi_x + colCompanyWidth + (colStandardWidth / 2), currentY + 3, { align: 'center' });
-    doc.text('Point', posisi_x + colCompanyWidth + (colStandardWidth / 2), currentY + 6, { align: 'center' });
-    
-    doc.text('Aspect', posisi_x + colCompanyWidth + colStandardWidth + (colAspectWidth / 2), currentY + 5, { align: 'center' });
-    doc.text('Question', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + (colQuestionWidth / 2), currentY + 5, { align: 'center' });
-    doc.text('Score', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
-    doc.text('Answer/Remarks', posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + (colRemarksWidth / 2), currentY + 5, { align: 'center' });
-    
-    // Header borders
-    doc.setLineWidth(0.1);
-    doc.setDrawColor(255, 255, 255);
-    doc.line(posisi_x + colCompanyWidth, currentY, posisi_x + colCompanyWidth, currentY + baseRowHeight);
-    doc.line(posisi_x + colCompanyWidth + colStandardWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth, currentY + baseRowHeight);
-    doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, currentY + baseRowHeight);
-    doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, currentY + baseRowHeight);
-    doc.line(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, currentY, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, currentY + baseRowHeight);
-    
-    currentY += baseRowHeight;
+    // Draw initial table header
+    currentY = drawTableHeader(currentY);
     
     // Define desired order
     const desiredOrder = ['SIAH', '7 Values', 'CSE', 'SDT', 'EXPERIENCE'];
@@ -309,7 +320,11 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
     
     sortedCompanyValues.forEach((companyValue, companyIndex) => {
         const items = groupedData[companyValue];
-        const startY = currentY; // Record start position untuk company value
+        let companyStartY = currentY; // Record start position untuk company value (use let for reassignment)
+        
+        // Track segments for cross-page company values
+        let pageSegments = [{ startY: companyStartY, endY: companyStartY }];
+        let currentSegmentIndex = 0;
         
         items.forEach((item, index) => {
             const originalScore = item.score || 0;
@@ -336,16 +351,75 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
             // Calculate dynamic row height
             const dynamicRowHeight = Math.max(baseRowHeight, maxLines * 4 + 2);
             
-            // Alternate row colors untuk value
+            // Check if row fits on current page, if not add new page
+            if (currentY + dynamicRowHeight > pageHeight - 20) { // 20mm margin from bottom
+                // Finish current segment
+                pageSegments[currentSegmentIndex].endY = currentY;
+                
+                // Draw company value and standard point background for current segment
+                const segmentHeight = pageSegments[currentSegmentIndex].endY - pageSegments[currentSegmentIndex].startY;
+                if (segmentHeight > 0) {
+                    const segmentStartY = pageSegments[currentSegmentIndex].startY;
+                    const segmentTextY = segmentStartY + (segmentHeight / 2) + 1;
+                    
+                    // Background untuk company value (spanning rows in current segment)
+                    doc.setGState(new doc.GState({opacity: 0.1}));
+                    doc.setFillColor(52, 73, 94);
+                    doc.rect(posisi_x, segmentStartY, colCompanyWidth, segmentHeight, 'F');
+                    
+                    // Background untuk standard point (spanning rows in current segment)
+                    doc.setFillColor(74, 144, 226);
+                    doc.rect(posisi_x + colCompanyWidth, segmentStartY, colStandardWidth, segmentHeight, 'F');
+                    
+                    // Reset opacity untuk text
+                    doc.setGState(new doc.GState({opacity: 1}));
+                    
+                    // Company Value text (di tengah) dengan enhanced styling
+                    doc.setTextColor(44, 62, 80);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8);
+                    const lines = doc.splitTextToSize(companyValue, colCompanyWidth - 4);
+                    const lineHeight = 3;
+                    let textStartY = segmentTextY - ((lines.length - 1) * lineHeight / 2);
+                    
+                    lines.forEach((line, i) => {
+                        doc.text(line, posisi_x + (colCompanyWidth / 2), textStartY + (i * lineHeight), { align: 'center' });
+                    });
+                    
+                    // Standard Point text (di tengah) dengan enhanced styling
+                    const standardPoint = standard_values[companyValue] || 0;
+                    doc.setTextColor(44, 62, 80);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    doc.text(standardPoint.toString(), posisi_x + colCompanyWidth + (colStandardWidth / 2), segmentTextY, { align: 'center' });
+                    
+                    // Border untuk company value dan standard point columns
+                    doc.setLineWidth(0.1);
+                    doc.setDrawColor(222, 226, 230);
+                    doc.rect(posisi_x, segmentStartY, colCompanyWidth, segmentHeight);
+                    doc.rect(posisi_x + colCompanyWidth, segmentStartY, colStandardWidth, segmentHeight);
+                }
+                
+                doc.addPage();
+                currentY = 20; // Start from top margin
+                currentY = drawTableHeader(currentY); // Redraw header on new page
+                companyStartY = currentY; // Reset company value start position for new page
+                
+                // Start new segment for new page
+                currentSegmentIndex++;
+                pageSegments.push({ startY: companyStartY, endY: companyStartY });
+            }
+            
+            // Alternate row colors untuk value dengan soft colors
             if (index % 2 === 0) {
-                doc.setFillColor(217, 225, 242); // Biru muda untuk value
+                doc.setFillColor(250, 252, 255); // Very light blue-grey untuk value
             } else {
-                doc.setFillColor(245, 248, 251); // Lebih terang untuk alternating
+                doc.setFillColor(245, 248, 252); // Slightly darker light blue-grey untuk alternating
             }
             doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, dynamicRowHeight, 'F');
             
             // Draw data
-            doc.setTextColor(0, 0, 0);
+            doc.setTextColor(44, 62, 80); // Professional dark grey text
             doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
             
@@ -355,70 +429,91 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
             // Question
             doc.text(wrappedQuestion, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + 2, currentY + 4);
             
-            // Score (show multiplied score, no color)
+            // Score (show multiplied score dengan enhanced styling)
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0, 0, 0); // Always black
-            doc.text(Math.round(multipliedScore).toString(), posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
+            doc.setFontSize(8);
+            const scoreColor = [44, 62, 80]; // Green if above target, red if below
+            doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+            doc.text(multipliedScore.toString(), posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
             
             // Answer/Remarks (dengan text wrapping yang lebih baik)
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(7);
+            doc.setTextColor(44, 62, 80); // Professional dark grey
             doc.text(wrappedAnswer, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + 2, currentY + 4);
             
-            // Borders untuk kolom kecuali company value dan standard point ( merged)
+            // Borders untuk kolom kecuali company value dan standard point - light gray border
             doc.setLineWidth(0.1);
+            doc.setDrawColor(222, 226, 230); // #dee2e6 border color
             doc.rect(posisi_x + colCompanyWidth + colStandardWidth, currentY, colAspectWidth, dynamicRowHeight); // Aspect
             doc.rect(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth, currentY, colQuestionWidth, dynamicRowHeight); // Question
             doc.rect(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth, currentY, colScoreWidth, dynamicRowHeight); // Score
             doc.rect(posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth, currentY, colRemarksWidth, dynamicRowHeight); // Remarks
             
             currentY += dynamicRowHeight;
+            
+            // Update current segment end position
+            pageSegments[currentSegmentIndex].endY = currentY;
         });
         
-        // Setelah semua items, gambar company value dan standard point di tengah dengan background dan border
-        const companyRowHeight = currentY - startY; // Total height dari semua rows
-        const companyTextY = startY + (companyRowHeight / 2) + 1;
+        // After all items, draw company value and standard point backgrounds for last segment
+        const lastSegmentHeight = pageSegments[currentSegmentIndex].endY - pageSegments[currentSegmentIndex].startY;
+        if (lastSegmentHeight > 0) {
+            const lastSegmentStartY = pageSegments[currentSegmentIndex].startY;
+            const lastSegmentTextY = lastSegmentStartY + (lastSegmentHeight / 2) + 1;
+            
+            // Background untuk company value (spanning rows in last segment)
+            doc.setGState(new doc.GState({opacity: 0.1}));
+            doc.setFillColor(52, 73, 94);
+            doc.rect(posisi_x, lastSegmentStartY, colCompanyWidth, lastSegmentHeight, 'F');
+            
+            // Background untuk standard point (spanning rows in last segment)
+            doc.setFillColor(74, 144, 226);
+            doc.rect(posisi_x + colCompanyWidth, lastSegmentStartY, colStandardWidth, lastSegmentHeight, 'F');
+            
+            // Reset opacity untuk text
+            doc.setGState(new doc.GState({opacity: 1}));
+            
+            // Company Value text (di tengah) dengan enhanced styling
+            doc.setTextColor(44, 62, 80);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            const lines = doc.splitTextToSize(companyValue, colCompanyWidth - 4);
+            const lineHeight = 3;
+            let textStartY = lastSegmentTextY - ((lines.length - 1) * lineHeight / 2);
+            
+            lines.forEach((line, i) => {
+                doc.text(line, posisi_x + (colCompanyWidth / 2), textStartY + (i * lineHeight), { align: 'center' });
+            });
+            
+            // Standard Point text (di tengah) dengan enhanced styling
+            const standardPoint = standard_values[companyValue] || 0;
+            doc.setTextColor(44, 62, 80);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text(standardPoint.toString(), posisi_x + colCompanyWidth + (colStandardWidth / 2), lastSegmentTextY, { align: 'center' });
+            
+            // Border untuk company value dan standard point columns
+            doc.setLineWidth(0.1);
+            doc.setDrawColor(222, 226, 230);
+            doc.rect(posisi_x, lastSegmentStartY, colCompanyWidth, lastSegmentHeight);
+            doc.rect(posisi_x + colCompanyWidth, lastSegmentStartY, colStandardWidth, lastSegmentHeight);
+        }
         
-        // Background untuk company value (spanning multiple rows)
-        doc.setFillColor(2, 83, 165); // Biru untuk company value
-        doc.rect(posisi_x, startY, colCompanyWidth, companyRowHeight, 'F');
+        // Check if total row fits on current page
+        if (currentY + baseRowHeight > pageHeight - 20) { // 20mm margin from bottom
+            doc.addPage();
+            currentY = 20; // Start from top margin
+            currentY = drawTableHeader(currentY); // Redraw header on new page
+        }
         
-        // Company Value text (di tengah)
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7);
-        const lines = doc.splitTextToSize(companyValue, colCompanyWidth - 4);
-        const lineHeight = 3;
-        let textStartY = companyTextY - ((lines.length - 1) * lineHeight / 2);
-        
-        lines.forEach((line, i) => {
-            doc.text(line, posisi_x + (colCompanyWidth / 2), textStartY + (i * lineHeight), { align: 'center' });
-        });
-        
-        // Background untuk standard point (spanning multiple rows)
-        doc.setFillColor(2, 83, 165); // Biru untuk standard point
-        doc.rect(posisi_x + colCompanyWidth, startY, colStandardWidth, companyRowHeight, 'F');
-        
-        // Standard Point text (di tengah)
-        const standardPoint = standard_values[companyValue] || 0;
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.text(standardPoint.toString(), posisi_x + colCompanyWidth + (colStandardWidth / 2), companyTextY, { align: 'center' });
-        
-        // Border untuk company value dan standard point columns
-        doc.setLineWidth(0.1);
-        doc.setDrawColor(128, 128, 128);
-        doc.rect(posisi_x, startY, colCompanyWidth, companyRowHeight);
-        doc.rect(posisi_x + colCompanyWidth, startY, colStandardWidth, companyRowHeight);
-        
-        // Total row untuk setiap company value (dengan multiplier yang benar)
-        doc.setFillColor(2, 83, 165); // Biru untuk total
+        // Total row untuk setiap company value dengan enhanced design
+        doc.setFillColor(2, 83, 165);
         doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, baseRowHeight, 'F');
         
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.text('TOTAL', posisi_x + colCompanyWidth + colStandardWidth + 2, currentY + 5);
         
         // Calculate total dengan multiplier yang benar
@@ -429,22 +524,27 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
             totalWithMultiplier += multipliedScore;
         });
         
-        doc.text(Math.round(totalWithMultiplier).toString(), posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
+        // Enhanced total score display
+        doc.setFontSize(11);
+        doc.text(totalWithMultiplier.toString(), posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + (colScoreWidth / 2), currentY + 5, { align: 'center' });
         
-        // Show standard vs actual in total row
+        // Show standard vs actual in total row dengan improved styling
         const standardTotal = standard_values[companyValue] || 0;
         doc.setFontSize(7);
-        doc.text(`(Target: ${standardTotal})`, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + 2, currentY + 5);
+        const targetText = `(Target: ${standardTotal})`;
+        const targetColor = totalWithMultiplier >= standardTotal ? [255, 255, 255] : [255, 255, 255];
+        doc.setTextColor(targetColor[0], targetColor[1], targetColor[2]);
+        doc.text(targetText, posisi_x + colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + 2, currentY + 5);
         
-        // Total row borders
+        // Total row borders dengan light gray border
         doc.setLineWidth(0.1);
-        doc.setDrawColor(128, 128, 128);
+        doc.setDrawColor(222, 226, 230); // #dee2e6 border color
         doc.rect(posisi_x, currentY, colCompanyWidth + colStandardWidth + colAspectWidth + colQuestionWidth + colScoreWidth + colRemarksWidth, baseRowHeight);
         
-        currentY += baseRowHeight; // Extra space after each company section
+        currentY += baseRowHeight + 2; // Reduced extra space after each company section
     });
     
-    return currentY + 10;
+    return currentY + 8; // Reduced extra spacing after assessment table
 };
 
 // Fallback function untuk assessment data sebagai text
@@ -562,7 +662,9 @@ const generateScoreResultForCard = (formData) => {
             case 'SIAH':
                 return score * 2;
             case '7 Values':
-                return score * 1.7;
+                const multipliedValue = score * 1.7;
+                // Custom rounding: >= 0.5 round up, < 0.5 round down
+                return Math.floor(multipliedValue) + (multipliedValue % 1 >= 0.5 ? 1 : 0);
             case 'CSE':
                 return score * 2;
             default:
@@ -591,7 +693,7 @@ const generateScoreResultForCard = (formData) => {
     const { remark, recommendation, color } = getEvaluation(total);
     
     return { 
-        total: Math.round(total), 
+        total: total, // Use calculated total without additional rounding
         remark, 
         recommendation, 
         color 
@@ -610,7 +712,9 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             case 'SIAH':
                 return score * 2;
             case '7 Values':
-                return score * 1.7;
+                const multipliedValue = score * 1.7;
+                // Custom rounding: >= 0.5 round up, < 0.5 round down
+                return Math.floor(multipliedValue) + (multipliedValue % 1 >= 0.5 ? 1 : 0);
             case 'CSE':
                 return score * 2;
             default:
@@ -654,7 +758,13 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
     doc.setFontSize(10);
     doc.setTextColor(color[0], color[1], color[2]);
     
-    currentY += 35;
+    // Add Performance Summary header
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PERFORMANCE SUMMARY', 20, currentY);
+    
+    currentY += 5; // Space for header
     
     // Standard values untuk comparison dengan urutan yang benar
     const standard_value = [
@@ -666,10 +776,10 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
     ];
     
     if (sortedMetrics.length > 0) {
-        // Table header untuk detail - FULL WIDTH
+        // Table header untuk detail - with proper margins
         const detailRowHeight = 8;
-        const tableStartX = 0;  // Start from edge
-        const tableWidth = pageWidth;  // Full page width
+        const tableStartX = 20;  // Start with proper margin
+        const tableWidth = pageWidth - 40;  // Leave margin on both sides
         
         // Dynamic column widths to fill full page width
         const col1Width = Math.floor(tableWidth * 0.35);  // 35% for Company Value
@@ -677,13 +787,13 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
         const col3Width = Math.floor(tableWidth * 0.2);   // 20% for Target
         const col4Width = tableWidth - col1Width - col2Width - col3Width;  // Remaining for Achievement
         
-        // Enhanced table header dengan gradient effect
-        doc.setFillColor(2, 83, 165); // Primary blue
+        // Enhanced table header dengan professional gradient
+        doc.setFillColor(52, 73, 94); // Professional navy blue
         doc.rect(tableStartX, currentY, tableWidth, detailRowHeight, 'F');
         
-        // Header border dengan shadow effect
-        doc.setLineWidth(1);
-        doc.setDrawColor(0, 51, 102); // Darker blue for border
+        // Header border dengan light gray border styling
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(222, 226, 230); // #dee2e6 border color
         doc.rect(tableStartX, currentY, tableWidth, detailRowHeight);
         
         // Header text dengan better spacing
@@ -695,9 +805,9 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
         doc.text('Target', tableStartX + col1Width + col2Width + (col3Width / 2), currentY + 6, { align: 'center' });
         doc.text('Achievement', tableStartX + col1Width + col2Width + col3Width + (col4Width / 2), currentY + 6, { align: 'center' });
         
-        // Vertical separators dalam header
-        doc.setLineWidth(0.5);
-        doc.setDrawColor(255, 255, 255);
+        // Vertical separators dalam header - light gray border
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(222, 226, 230); // #dee2e6 border color
         doc.line(tableStartX + col1Width, currentY + 1, tableStartX + col1Width, currentY + detailRowHeight - 1);
         doc.line(tableStartX + col1Width + col2Width, currentY + 1, tableStartX + col1Width + col2Width, currentY + detailRowHeight - 1);
         doc.line(tableStartX + col1Width + col2Width + col3Width, currentY + 1, tableStartX + col1Width + col2Width + col3Width, currentY + detailRowHeight - 1);
@@ -710,59 +820,66 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             const multipliedScore = getMultipliedScore(metric.company_value, metric.total_score);
             const percentage = standardScore === 0 ? 100 : Math.round((multipliedScore / standardScore) * 100);
             
-            // Enhanced alternating row colors dengan subtle gradients
+            // Enhanced alternating row colors dengan modern palette
             let rowBgColor;
             if (index % 2 === 0) {
-                rowBgColor = [248, 249, 250]; // Light grey
+                rowBgColor = [249, 251, 253]; // Very light blue-grey
             } else {
-                rowBgColor = [255, 255, 255]; // White
+                rowBgColor = [255, 255, 255]; // Pure white
             }
             
-            // Row background dengan subtle border
+            // Row background dengan subtle shadow effect
             doc.setFillColor(rowBgColor[0], rowBgColor[1], rowBgColor[2]);
             doc.rect(tableStartX, currentY, tableWidth, detailRowHeight, 'F');
             
-            // Row border dengan subtle color
-            doc.setLineWidth(0.2);
-            doc.setDrawColor(230, 230, 230);
+            // Row border dengan light gray border
+            doc.setLineWidth(0.1);
+            doc.setDrawColor(222, 226, 230); // #dee2e6 border color
             doc.rect(tableStartX, currentY, tableWidth, detailRowHeight);
             
-            // Cell content dengan better alignment
-            doc.setTextColor(0, 0, 0);
+            // Cell content dengan improved readability
+            doc.setTextColor(44, 62, 80); // Professional dark grey
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             
-            // Company Value dengan emphasis
+            // Company Value dengan professional emphasis
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(2, 83, 165); // Corporate blue
+            doc.setTextColor(52, 73, 94); // Professional navy blue
             doc.text(metric.company_value, tableStartX + (col1Width / 2), currentY + 6, { align: 'center' });
             
-            // Actual Score dengan center alignment (multiplied score)
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(0, 0, 0);
-            const actualText = Math.round(multipliedScore).toString();
+            // Actual Score dengan enhanced styling (multiplied score)
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            const actualText = multipliedScore.toString();
+            // Color coding based on performance vs target
+            const actualColor = multipliedScore >= standardScore ? [39, 174, 96] : [231, 76, 60]; // Green if above target, red if below
+            doc.setTextColor(actualColor[0], actualColor[1], actualColor[2]);
             doc.text(actualText, tableStartX + col1Width + (col2Width / 2), currentY + 6, { align: 'center' });
             
-            // Target Score dengan center alignment
+            // Target Score dengan professional styling
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(108, 117, 125); // Muted grey for target
             const targetText = standardScore.toString();
             doc.text(targetText, tableStartX + col1Width + col2Width + (col3Width / 2), currentY + 6, { align: 'center' });
             
-            // Achievement color based on performance
-            let achievementColor = [220, 53, 69]; // Red for poor
-            if (percentage >= 80) achievementColor = [40, 167, 69]; // Green for good
-            else if (percentage >= 60) achievementColor = [255, 193, 7]; // Yellow for average
+            // Achievement color based on performance dengan enhanced palette
+            let achievementColor = [231, 76, 60]; // Professional red for poor
+            if (percentage >= 100) achievementColor = [39, 174, 96]; // Green for excellent
+            else if (percentage >= 80) achievementColor = [52, 152, 219]; // Blue for good
+            else if (percentage >= 60) achievementColor = [241, 196, 15]; // Gold for average
             
-            // Achievement percentage dengan enhanced progress bar mini
-            const achievementBarWidth = Math.floor(col4Width * 0.6); // 60% of achievement column width
-            const achievementBarHeight = 4;
-            const achievementBarX = tableStartX + col1Width + col2Width + col3Width + (col4Width - achievementBarWidth) / 2;
-            const achievementBarY = currentY + 2;
+            // Achievement percentage dengan sophisticated progress bar
+            const achievementBarWidth = Math.floor(col4Width * 0.65); // 65% of achievement column width
+            const achievementBarHeight = 5;
+            const achievementBarX = (tableStartX - 5) + col1Width + col2Width + col3Width + (col4Width - achievementBarWidth) / 2;
+            const achievementBarY = currentY + 1.5;
             
-            // Background bar dengan border
-            doc.setFillColor(240, 240, 240);
+            // Background bar dengan rounded corners effect
+            doc.setFillColor(236, 240, 244);
             doc.rect(achievementBarX, achievementBarY, achievementBarWidth, achievementBarHeight, 'F');
             doc.setLineWidth(0.1);
-            doc.setDrawColor(200, 200, 200);
+            doc.setDrawColor(189, 195, 199);
             doc.rect(achievementBarX, achievementBarY, achievementBarWidth, achievementBarHeight);
             
             // Achievement fill bar dengan gradient effect
@@ -770,22 +887,22 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             doc.setFillColor(achievementColor[0], achievementColor[1], achievementColor[2]);
             doc.rect(achievementBarX, achievementBarY, achievementFillWidth, achievementBarHeight, 'F');
             
-            // Achievement text dengan better positioning
+            // Achievement text dengan professional styling
             doc.setTextColor(achievementColor[0], achievementColor[1], achievementColor[2]);
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(7);
             doc.text(`${percentage}%`, achievementBarX + achievementBarWidth + 3, currentY + 6);
             
-            // Vertical separators untuk cell consistency
-            doc.setLineWidth(0.2);
-            doc.setDrawColor(220, 220, 220);
+            // Vertical separators untuk cell consistency - light gray border
+            doc.setLineWidth(0.1);
+            doc.setDrawColor(222, 226, 230); // #dee2e6 border color
             doc.line(tableStartX + col1Width, currentY, tableStartX + col1Width, currentY + detailRowHeight);
             doc.line(tableStartX + col1Width + col2Width, currentY, tableStartX + col1Width + col2Width, currentY + detailRowHeight);
             doc.line(tableStartX + col1Width + col2Width + col3Width, currentY, tableStartX + col1Width + col2Width + col3Width, currentY + detailRowHeight);
             
-            // Borders untuk final row consistency
+            // Borders untuk final row consistency - light gray border
             doc.setLineWidth(0.1);
-            doc.setDrawColor(200, 200, 200);
+            doc.setDrawColor(222, 226, 230); // #dee2e6 border color
             doc.rect(tableStartX, currentY, col1Width, detailRowHeight);
             doc.rect(tableStartX + col1Width, currentY, col2Width, detailRowHeight);
             doc.rect(tableStartX + col1Width + col2Width, currentY, col3Width, detailRowHeight);
@@ -794,12 +911,17 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
             currentY += detailRowHeight;
         });
         
-        // Summary footer untuk tabel
-        doc.setFillColor(2, 83, 165); // Corporate blue
+        // Enhanced summary footer untuk tabel dengan attractive design
+        doc.setFillColor(2, 83, 165); // Attractive blue untuk overall total
         doc.rect(tableStartX, currentY, tableWidth, detailRowHeight, 'F');
         
+        // Add light gray border
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(222, 226, 230); // #dee2e6 border color
+        doc.rect(tableStartX, currentY, tableWidth, detailRowHeight);
+        
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text('OVERALL TOTAL', tableStartX + (col1Width / 2), currentY + 6, { align: 'center' });
         
@@ -810,17 +932,21 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
         }, 0);
         const overallPercentage = overallTarget === 0 ? 100 : Math.round((overallActual / overallTarget) * 100);
         
-        doc.text(Math.round(overallActual).toString(), tableStartX + col1Width + (col2Width / 2), currentY + 6, { align: 'center' });
+        // Enhanced overall scores display
+        doc.setFontSize(11);
+        doc.text(overallActual.toString(), tableStartX + col1Width + (col2Width / 2), currentY + 6, { align: 'center' });
+        doc.setFontSize(9);
         doc.text(overallTarget.toString(), tableStartX + col1Width + col2Width + (col3Width / 2), currentY + 6, { align: 'center' });
+        doc.setFontSize(10);
         doc.text(`${overallPercentage}%`, tableStartX + col1Width + col2Width + col3Width + (col4Width / 2), currentY + 6, { align: 'center' });
         
-        currentY += detailRowHeight;
+        currentY += detailRowHeight + 5; // Reduced spacing after total
     }
     
     // Return total and evaluation for chart card
     return { 
-        nextY: currentY + 15, 
-        total: Math.round(total), 
+        nextY: currentY + 5, // Reduced additional spacing after performance summary
+        total: total, // Use calculated total without additional rounding
         remark, 
         recommendation, 
         color 
@@ -902,7 +1028,9 @@ export const generateChartImage = async (formData) => {
                 case 'SIAH':
                     return score * 2;
                 case '7 Values':
-                    return score * 1.7;
+                    const multipliedValue = score * 1.7;
+                    // Custom rounding: >= 0.5 round up, < 0.5 round down
+                    return Math.floor(multipliedValue) + (multipliedValue % 1 >= 0.5 ? 1 : 0);
                 case 'CSE':
                     return score * 2;
                 default:
@@ -1298,13 +1426,30 @@ export const generatePDF = async (formData) => {
 
         yPosition = generateAssessmentTable(doc, formData, yPosition);
 
+        // Check if we need new page for performance summary section
+        if (yPosition > pageHeight - 100) {
+            doc.addPage();
+            yPosition = 20;
+        }
+
+        // Performance Summary Table (moved above chart)
+        const comprehensiveResult = generateComprehensiveScoreSection(doc, formData, yPosition);
+        yPosition = comprehensiveResult.nextY;
+
         // Check if we need new page for chart section
         if (yPosition > pageHeight - 120) {
             doc.addPage();
             yPosition = 20;
         }
 
-        let scoreResult = null;
+        // Add Chart section header
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('PERFORMANCE CHART', 20, yPosition);
+        yPosition += 15;
+
+        let scoreResult = comprehensiveResult; // Use result from performance summary
         
         try {
             const chartPromise = generateChartImage(formData);
@@ -1314,8 +1459,7 @@ export const generatePDF = async (formData) => {
             
             const chartImage = await Promise.race([chartPromise, chartTimeoutPromise]);
             
-            // Generate scoreResult for card data
-            scoreResult = generateScoreResultForCard(formData);
+            // scoreResult already available from comprehensiveResult above
             
             if (chartImage && chartImage.length > 100) {
                 // Chart dan Card side by side
@@ -1329,12 +1473,12 @@ export const generatePDF = async (formData) => {
                 const cardWidth = 50;
                 const cardHeight = 80;
 
-                // Background card dengan border
-                doc.setFillColor(248, 249, 250);
-                doc.rect(cardX, cardY, cardWidth, cardHeight, 'F');
-                doc.setLineWidth(0.5);
-                doc.setDrawColor(200, 200, 200);
-                doc.rect(cardX, cardY, cardWidth, cardHeight);
+                // // Background card dengan border
+                // doc.setFillColor(248, 249, 250);
+                // doc.rect(cardX, cardY, cardWidth, cardHeight, 'F');
+                // doc.setLineWidth(0.5);
+                // doc.setDrawColor(200, 200, 200);
+                // doc.rect(cardX, cardY, cardWidth, cardHeight);
 
                 // Total Score di center atas card
                 doc.setTextColor(0, 0, 0);
@@ -1408,6 +1552,7 @@ export const generatePDF = async (formData) => {
             }
         } catch (chartError) {
             console.error('Chart generation failed with error:', chartError);
+            // scoreResult already available from comprehensiveResult above
             // Continue without chart but add error message
             doc.setTextColor(220, 53, 69);
             doc.setFontSize(10);
@@ -1415,16 +1560,6 @@ export const generatePDF = async (formData) => {
             doc.text('Chart generation failed: ' + chartError.message, 20, yPosition);
             yPosition += 15;
         }
-
-        // Check if we need new page for comprehensive score section
-        if (yPosition > pageHeight - 100) {
-            doc.addPage();
-            yPosition = 20;
-        }
-
-        // Comprehensive Score Section (Performance Summary Table)
-        const comprehensiveResult = generateComprehensiveScoreSection(doc, formData, yPosition);
-        yPosition = comprehensiveResult.nextY;
 
         // Footer
         doc.setFontSize(8);
@@ -1443,8 +1578,6 @@ export const generatePDF = async (formData) => {
         const fileName = `Interview_Assessment_${safeFileName}_${new Date().toISOString().split('T')[0]}.pdf`;
         
         doc.save(fileName);
-        
-        toast.success('PDF downloaded successfully!');
         
     } catch (error) {
         console.error('Error generating PDF:', error);
