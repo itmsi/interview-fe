@@ -154,13 +154,13 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
         try {
             let response;
             if (isEdit) {
-                response = await apiPostFormData(endpoint, `/candidates/${initialData.id}/multipart`, token, dataToSend);
+                response = await apiPatch(endpoint, `/candidates/${initialData.id}/multipart`, token, dataToSend);
                 toast.success('Candidate updated successfully!');
             } else {
                 if (hasFile) {
                     response = await apiPostFormData(endpoint, '/candidates/multipart', token, dataToSend);
                 } else {
-                    response = await apiPostFormData(endpoint, '/candidates/multipart', token, dataToSend);
+                    response = await apiPost(endpoint, '/candidates/multipart', token, dataToSend);
                 }
                 
                 toast.success('Candidate created successfully!');
