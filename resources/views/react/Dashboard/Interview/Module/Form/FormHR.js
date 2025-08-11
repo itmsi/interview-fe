@@ -57,7 +57,6 @@ export const FormHR = ({
         { key: 'product_knowledge', label: 'Product Knowledge' },
         { key: 'significant_contribution', label: 'Significant Contribution' },
         { key: 'goals_align_with_roe', label: 'Goals align with ROE Company' },
-        { key: 'interest_happiness_self_satisfaction', label: 'Interest, happiness, self-satisfaction' }
     ];
 
     const [formSiah, setFormSiah] = useState(
@@ -154,8 +153,7 @@ export const FormHR = ({
                         (aspectLabel === 'Role Matching' && itemAspect.includes('Role Matching')) ||
                         (aspectLabel === 'Product Knowledge' && itemAspect.includes('Product Knowledge')) ||
                         (aspectLabel === 'Significant Contribution' && itemAspect.includes('Significant Contribution')) ||
-                        (aspectLabel === 'Goals Align with Role' && itemAspect.includes('Goals Align with Role')) ||
-                        (aspectLabel === 'Interest Happiness Self Satisfaction' && itemAspect.includes('Interest Happiness Self Satisfaction'))
+                        (aspectLabel === 'Goals Align with Role' && itemAspect.includes('Goals Align with Role'))
                     );
                 }
                 
@@ -338,11 +336,11 @@ const QuestionSDT = ({
     // SDT Point mapping based on aspect
     const getSDTPoint = (aspectKey) => {
         const pointMapping = {
-            'l2': 20, // L2 (External Regulation – Driven by rewards or punishments ( not ideal)
-            'l3': 25, // L3 (Self - Involment and focus on self and other evaluation)
-            'l4': 30, // L4 (I personally think it is important and consciously give it meaning)
-            'l5': 35, // L5 (Consistency self-integration of goals)
-            'l6': 40  // L6 (Interest, happiness, self-satisfaction)
+            'l2': 20,
+            'l3': 25,
+            'l4': 30,
+            'l5': 35,
+            'l6': 40
         };
         return pointMapping[aspectKey] || 0;
     };
@@ -351,38 +349,37 @@ const QuestionSDT = ({
     useEffect(() => {
         if (isEditMode && editingFormData && editingFormData.interview) {
             const sdtData = editingFormData.interview.find(item => item.company_value === 'SDT');
-            if (sdtData) {
+            if (sdtData && !selectedAspect) { // Only set if selectedAspect is empty
                 // Find the matching aspect
                 const matchingAspect = interview_aspects.find(aspect => {
                     const aspectLabel = aspect.label.toLowerCase();
                     const itemAspect = sdtData.aspect.toLowerCase();
+                    
+                    // Check if aspect contains the L level identifier
+                    if (aspectLabel.includes('l2') && itemAspect.includes('l2')) return true;
+                    if (aspectLabel.includes('l3') && itemAspect.includes('l3')) return true;
+                    if (aspectLabel.includes('l4') && itemAspect.includes('l4')) return true;
+                    if (aspectLabel.includes('l5') && itemAspect.includes('l5')) return true;
+                    if (aspectLabel.includes('l6') && itemAspect.includes('l6')) return true;
+                    
                     return aspectLabel.includes(itemAspect) || itemAspect.includes(aspectLabel);
                 });
                 
-                if (matchingAspect && selectedAspect !== matchingAspect.key) {
+                if (matchingAspect) {
                     setSelectedAspect(matchingAspect.key);
-                    // Only update form if the data is different to prevent infinite loop
-                    const currentFormData = form[matchingAspect.key];
-                    const newFormData = {
-                        point: getSDTPoint(matchingAspect.key).toString(), // Use mapped point value
-                        question: sdtData.question || '',
-                        remark: sdtData.answer || ''
-                    };
-                    
-                    // Check if the data is actually different before updating
-                    if (!currentFormData || 
-                        currentFormData.point !== newFormData.point ||
-                        currentFormData.question !== newFormData.question ||
-                        currentFormData.remark !== newFormData.remark) {
-                        setForm(prev => ({
-                            ...prev,
-                            [matchingAspect.key]: newFormData
-                        }));
-                    }
+                    // Update form data
+                    setForm(prev => ({
+                        ...prev,
+                        [matchingAspect.key]: {
+                            point: getSDTPoint(matchingAspect.key).toString(),
+                            question: sdtData.question || '',
+                            remark: sdtData.answer || ''
+                        }
+                    }));
                 }
             }
         }
-    }, [isEditMode, editingFormData, interview_aspects, selectedAspect]); // Added selectedAspect to prevent unnecessary updates
+    }, [isEditMode, editingFormData, interview_aspects]); // Removed selectedAspect from dependencies
 
     const handleAspectChange = (aspectKey) => {
         setSelectedAspect(aspectKey);
@@ -391,11 +388,17 @@ const QuestionSDT = ({
         // Auto-set point based on selected aspect
         if (aspectKey) {
             const pointValue = getSDTPoint(aspectKey);
+            
+            // In edit mode, preserve existing data if changing to a different aspect
+            // In create mode or when changing aspect, reset to default values
+            const existingData = form[aspectKey] || {};
+            
             setForm(prev => ({
                 ...prev,
                 [aspectKey]: {
-                    ...prev[aspectKey],
-                    point: pointValue.toString()
+                    point: pointValue.toString(),
+                    question: existingData.question || '',
+                    remark: existingData.remark || ''
                 }
             }));
         }
