@@ -35,6 +35,7 @@ export const Sidemenu = ({ systems, profile }) => {
                 return <AiOutlineAppstore className="me-2" />; // fallback icon
         }
     };
+    
     return (
         <>
             {isMobile && (
@@ -74,11 +75,13 @@ export const Sidemenu = ({ systems, profile }) => {
                     </div>
                     }
                     <ul className="list-unstyled my-5">
-                        <li className={`mb-2`}>
-                            <Link to={'/dashboard'} className={`${isActive('/dashboard') ? 'active' : ''}`}>
-                                <RxDashboard className='me-2' />Dashboard 
-                            </Link>
-                        </li>
+                        {profile.user.username === 'admin' && (
+                            <li className={`mb-2`}>
+                                <Link to={'/dashboard'} className={`${isActive('/dashboard') ? 'active' : ''}`}>
+                                    <RxDashboard className='me-2' />Dashboard 
+                                </Link>
+                            </li>
+                        )}
                         {systems.map((system, idx) => {
                             const isOpen = openIndex === idx || isMenuGroupActive(system);
                             return (

@@ -221,7 +221,7 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
                                 const value = e.target.value.replace(/[^\d]/g, '');
                                 setForm(prev => ({
                                     ...prev,
-                                    candidate_phone: value // perbaikan di sini
+                                    candidate_phone: value
                                 }));
                             }}
                             maxLength={13}
@@ -302,8 +302,16 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
                         <Form.Control 
                             name="candidate_age" 
                             value={form.candidate_age}
-                            onChange={handleChange}
+                            // onChange={handleChange}
+                            onChange={(e) => {
+                                const value = e.target.value.replace(/[^\d]/g, '');
+                                setForm(prev => ({
+                                    ...prev,
+                                    candidate_age: value
+                                }));
+                            }}
                             placeholder="Enter your age"
+                            maxLength={2}
                             required
                         />
                         <Form.Control.Feedback type="invalid">Age is required.</Form.Control.Feedback>

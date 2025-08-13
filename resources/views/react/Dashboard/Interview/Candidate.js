@@ -415,7 +415,13 @@ const LayoutCandidat = ({
                                     </li>
                                     <li>
                                         <div className='titleRole'>Date Interview</div>
-                                        <div className='titleRemark'>{candidate.date_applied}</div>
+                                        <div className='titleRemark'>
+                                            {candidate.date_schedule && candidate.date_schedule.length > 0 
+                                                ? candidate.date_schedule
+                                                    .sort((a, b) => new Date(b.date) - new Date(a.date))[0].date
+                                                : "-"
+                                            }
+                                        </div>
                                     </li>
                                     <li>
                                         <div className='titleRole'>Assigned</div>
@@ -507,27 +513,27 @@ const HeaderInformationProfile = ({ data }) => {
                 <div className="card-body">
                     <div className="d-flex align-items-center flex-wrap flex-md-nowrap row-gap-3">
                         <Row className="g-3 align-items-center">
-                            <div className="col-md-3">
-                                <p className="mb-1 color-label font-primary">Candiate Name</p>
+                            <div className="col-md-3 col-sm-6 col-12">
+                                <p className="mb-1 color-label font-primary">Candidate Name</p>
                                 <h6 className="fw-medium m-0 fs-14">{data.name}</h6>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Company</p>
                                 <h6 className="fw-medium m-0 fs-14">{data.company}</h6>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Applied Role</p>
                                 <h6 className="fw-medium m-0 fs-14">{data.position}</h6>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Age</p>
                                 <h6 className="fw-medium m-0 fs-14">{data.age}</h6>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Gender</p>
                                 <h6 className="fw-medium m-0 fs-14">{data?.personal_information?.[0]?.candidate_gender || "-"}</h6>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Recruiter</p>
                                 {Array.isArray(data.interviewer) && data.interviewer.length > 0
                                     ? data.interviewer.map((name, idx) => (
@@ -538,11 +544,17 @@ const HeaderInformationProfile = ({ data }) => {
                                     : <Badge bg="light" text="dark">No interviewers</Badge>
                                 }
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Date of Interview</p>
-                                <h6 className="fw-medium m-0 fs-14">{data.date_applied}</h6>
+                                <h6 className="fw-medium m-0 fs-14">
+                                    {data.date_schedule && data.date_schedule.length > 0 
+                                        ? data.date_schedule
+                                            .sort((a, b) => new Date(b.date) - new Date(a.date))[0].date
+                                        : "-"
+                                    }
+                                </h6>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Status</p>
                                 <Badge bg={getBadgeVariant(data.status)}><VscDebugBreakpointData /> {data.status}</Badge>
                             </div>
@@ -676,8 +688,13 @@ const StyleListCandidate = styled(Card) `
 `;
 
 const StyleCanvas = styled(Offcanvas) `
-    --bs-offcanvas-width:60%;
+
+    --bs-offcanvas-width:100%;
     --bs-border-color-translucent: #e5e7eb;
+    z-index: 10000;
+    @media (min-width: 992px) {
+        --bs-offcanvas-width:60%;
+    }
     .offcanvas-title {
         display: inline-flex;
         align-items: center;

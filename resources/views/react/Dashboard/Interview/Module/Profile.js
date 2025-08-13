@@ -24,51 +24,51 @@ const PersonalInformation = ({
             </div>
             <div className="card-body pb-0">
                 <div className="row align-items-center">
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">
-                                Candiate Name
+                                Candidate Name
                             </p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_name || "n/a"}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Phone</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_phone || "-"}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Gender</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_gender || "n/a"}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Date of Birth</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_date_birth || "n/a"}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Email</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_email || "n/a"}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Nationality</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_nationality || "-"}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Religion</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_religion || "-"}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Marital status</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_marital_status || "-"}</h6>
@@ -87,25 +87,25 @@ const AddressInformation = ({ data }) => {
             </div>
             <div className="card-body pb-0">
                 <div className="row">
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Address</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_address || '-'}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">City</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_city || '-'}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">State</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_state || '-'}</h6>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-3 col-6">
                         <div className="mb-3">
                             <p className="mb-1 color-label font-primary">Country</p>
                             <h6 className="fw-medium m-0 fs-14">{data?.candidate_country || '-'}</h6>

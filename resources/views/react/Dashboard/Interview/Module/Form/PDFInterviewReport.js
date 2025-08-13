@@ -622,7 +622,7 @@ const generateComprehensiveScoreSection = (doc, formData, yPosition) => {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('PERFORMANCE SUMMARY', 20, currentY);
+    doc.text('PERFORMANCE SUMMARY', 25, currentY);
     
     currentY += 5; // Space for header
     
@@ -1204,6 +1204,16 @@ export const generatePDF = async (formData) => {
         // Generate performance summary
         const comprehensiveResult = generateComprehensiveScoreSection(doc, formData, yPosition);
         yPosition = comprehensiveResult.nextY;
+        
+        // Add border around performance summary section
+        const summaryBorderX = 20;
+        const summaryBorderY = 30; // Start from where performance summary begins
+        const summaryBorderWidth = pageWidth - 40; // Full width with margins
+        const summaryBorderHeight = yPosition - 40; // Height of the performance summary section
+        
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(0);
+        doc.rect(summaryBorderX, summaryBorderY, summaryBorderWidth, summaryBorderHeight);
 
         // Check pagination for chart - if not enough space, add new page
         if (yPosition > pageHeight - 120) {
@@ -1212,10 +1222,11 @@ export const generatePDF = async (formData) => {
         }
 
         // Add chart section
+        const chartSectionStartY = yPosition + 20; // Save start position for border
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text('PERFORMANCE CHART', 20, yPosition);
+        doc.text('PERFORMANCE CHART', 25, yPosition + 15);
         yPosition += 15;
 
         let scoreResult = comprehensiveResult;
@@ -1312,6 +1323,17 @@ export const generatePDF = async (formData) => {
             doc.text('Chart generation failed: ' + chartError.message, 20, yPosition);
             yPosition += 15;
         }
+        
+        // Add border around the entire chart section
+        const chartBorderX = 20;
+        const chartBorderWidth = pageWidth - 40;
+        const chartBorderHeight = yPosition - chartSectionStartY;
+        
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(0);
+        doc.rect(chartBorderX, chartSectionStartY - 15, chartBorderWidth, chartBorderHeight);
+        // doc.rect(chartBorderX, chartSectionStartY - 5, chartBorderWidth, chartBorderHeight + 10);
+        
         // Add footer
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
