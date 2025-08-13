@@ -130,11 +130,11 @@ const DownloadResume = ({ data }) => {
                                 <MdOutlineDescription />
                             </span>
                             <div>
-                                <h6 className="fw-medium m-0 fs-14">Resume.doc</h6>
-                                <span>120 KB</span>
+                                <h6 className="fw-medium m-0 fs-14">{data ? "Resume" : "No Resume Uploaded"}</h6>
                             </div>
                         </div>
                     </div>
+                    {data && 
                     <div className="col-md-6">
                         <div className="mb-3 text-md-end">
                             <a className="btn btn-dark d-inline-flex align-items-center fs-14 font-primary" href={data} target='_blank' data-discover="true">
@@ -143,6 +143,7 @@ const DownloadResume = ({ data }) => {
                             </a>
                         </div>
                     </div>
+                    }
                 </div>
             </div>
         </div>

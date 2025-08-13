@@ -25,7 +25,7 @@
     <div class="container-fluid">
         <div class="row align-items-center">
             <div class="col-lg-8 p-3 vh-100 overflow-hidden d-none d-md-block">
-                <div class="w-100 h-100 rounded-4" style="background-image: url('{{ asset('assets/img/login.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+                <div class="w-100 h-100 rounded-4" style="background-image: url('{{ asset('assets/img/login-banner.jpg') }}'); background-size: 100%; background-position: center; background-repeat: no-repeat;background-color:#f0ebe5">
                 </div>
             </div>
             <div class="col-lg-4 px-lg-5 d-flex flex-column justify-content-center vh-100">
