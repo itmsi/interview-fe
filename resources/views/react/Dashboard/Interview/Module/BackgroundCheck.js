@@ -24,7 +24,7 @@ export const BackgroundCheck = ({
     
     // Form state
     const [form, setForm] = useState({
-        status: 'hired', // 'hired' or 'rejected'
+        status: '', // 'hired' or 'rejected'
         notes: '',
         file_attachment: null
     });
@@ -96,9 +96,9 @@ export const BackgroundCheck = ({
         }
     };
 
-    // Handle status switch change
+    // Handle status radio button change
     const handleStatusChange = (e) => {
-        const status = e.target.checked ? 'hired' : 'rejected';
+        const status = e.target.value;
         setForm(prev => ({ ...prev, status }));
     };
 
@@ -114,6 +114,7 @@ export const BackgroundCheck = ({
             const formData = new FormData();
             formData.append('candidate_id', candidateId);
             formData.append('background_check_reject', form.status === 'rejected');
+            formData.append('status', form.status); // Add status field
             formData.append('background_check_note', form.notes);
             formData.append('create_by', loginInfo?.employee?.name || 'tidak dikenal');
             
@@ -167,16 +168,26 @@ export const BackgroundCheck = ({
     };
 
     // Get status badge variant
-    const getStatusBadge = (isRejected) => {
-        return isRejected ? (
-            <Badge bg="danger" className="d-flex align-items-center gap-1 fs-14 rounded-3 justify-content-center">
-                <FaUserTimes /> Rejected
-            </Badge>
-        ) : (
-            <Badge bg="success" className="d-flex align-items-center gap-1 fs-14 rounded-3 justify-content-center">
-                <FaUserCheck /> Hired
-            </Badge>
-        );
+    const getStatusBadge = (isRejected, status) => {
+        if (isRejected || status === 'rejected') {
+            return (
+                <Badge bg="danger" className="d-flex align-items-center gap-1 fs-14 rounded-3 justify-content-center">
+                    <FaUserTimes /> Rejected
+                </Badge>
+            );
+        } else if (status === 'hired') {
+            return (
+                <Badge bg="success" className="d-flex align-items-center gap-1 fs-14 rounded-3 justify-content-center">
+                    <FaUserCheck /> Hired
+                </Badge>
+            );
+        } else {
+            return (
+                <Badge bg="warning" className="d-flex align-items-center gap-1 fs-14 rounded-3 justify-content-center">
+                    <FaCalendar /> On Hold
+                </Badge>
+            );
+        }
     };
 
     // Format date
@@ -252,7 +263,7 @@ export const BackgroundCheck = ({
                                                 </div>
                                             </td>
                                             <td valign='middle'>
-                                                {getStatusBadge(check.background_check_reject)}
+                                                {getStatusBadge(check.background_check_reject, check.status || (check.background_check_reject ? 'rejected' : 'hired'))}
                                             </td>
                                             <td valign='middle' className="text-center">
                                                 <div className="d-flex align-items-center gap-2 justify-content-center">
@@ -302,7 +313,7 @@ export const BackgroundCheck = ({
                 size="md"
                 onHide={() => {
                     setShowAddModal(false);
-                    setForm({ status: 'hired', notes: '', file_attachment: null });
+                    setForm({ status: '', notes: '', file_attachment: null });
                 }}
                 onConfirm={handleAdd}
                 titleConfirm={submitting ? "Adding..." : "Add Check"}
@@ -313,27 +324,52 @@ export const BackgroundCheck = ({
                     <Form.Group className="mb-4">
                         <Form.Label className="mb-3">Background Check Result</Form.Label>
                         <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
-                            <div className="d-flex align-items-center gap-2">
+                            {/* <div className="d-flex align-items-center gap-2">
                                 <FaUserTimes className="text-danger" />
                                 <span className={form.status === 'rejected' ? 'text-dark fw-bold' : 'text-muted'}>
                                     Rejected
                                 </span>
-                            </div>
+                            </div> */}
 
                             <Form.Check 
-                                type="switch"
-                                id="status-switch"
+                                type="radio"
+                                id="status-rejected"
+                                name="status"
+                                value="rejected"
+                                checked={form.status === 'rejected'}
+                                onChange={handleStatusChange}
+                                disabled={submitting}
+                                className="mx-2"
+                                label="Rejected"
+                            />
+                            <Form.Check 
+                                type="radio"
+                                id="status-hold"
+                                name="status"
+                                value="on_hold"
+                                checked={form.status === 'on_hold'}
+                                onChange={handleStatusChange}
+                                disabled={submitting}
+                                className="mx-2"
+                                label="On Hold"
+                            />
+                            <Form.Check 
+                                type="radio"
+                                id="status-hired"
+                                name="status"
+                                value="hired"
                                 checked={form.status === 'hired'}
                                 onChange={handleStatusChange}
                                 disabled={submitting}
                                 className="mx-2"
+                                label="Hired"
                             />
-                            <div className="d-flex align-items-center gap-2">
+                            {/* <div className="d-flex align-items-center gap-2">
                                 <FaUserCheck className="text-success" />
                                 <span className={form.status === 'hired' ? 'text-dark fw-bold' : 'text-muted'}>
                                     Hired
                                 </span>
-                            </div>
+                            </div> */}
                         </div>
                     </Form.Group>
                     
@@ -396,7 +432,7 @@ export const BackgroundCheck = ({
                     <p>Are you sure you want to delete this background check?</p>
                     <div className="bg-light p-3 rounded">
                         <div className="mb-2">
-                            {deletingCheck && getStatusBadge(deletingCheck.background_check_reject)}
+                            {deletingCheck && getStatusBadge(deletingCheck.background_check_reject, deletingCheck.status || (deletingCheck.background_check_reject ? 'rejected' : 'hired'))}
                         </div>
                         <p className="mb-1 text-wrap">
                             <strong>Notes:</strong> {deletingCheck?.background_check_note}

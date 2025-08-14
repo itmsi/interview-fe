@@ -691,9 +691,9 @@ const StyleCanvas = styled(Offcanvas) `
 
     --bs-offcanvas-width:100%;
     --bs-border-color-translucent: #e5e7eb;
-    z-index: 10000;
     @media (min-width: 992px) {
         --bs-offcanvas-width:60%;
+        /* z-index: 10000; */
     }
     .offcanvas-title {
         display: inline-flex;

@@ -149,6 +149,58 @@ const generateManualTable = (doc, formData, yPosition) => {
     return currentY + 8;
 };
 
+// Add page numbers and headers to PDF
+const addPageNumbers = (doc) => {
+    const pageCount = doc.internal.getNumberOfPages();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    // Save current state
+    const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+    
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        
+        // Add page number at bottom right
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(128, 128, 128); // Gray color
+        
+        const pageText = `Page ${i} of ${pageCount}`;
+        const textWidth = doc.getTextWidth(pageText);
+        doc.text(pageText, pageWidth - textWidth - 15, pageHeight - 5);
+        
+        // Add document title at bottom left (except first page)
+        // if (i > 1) {
+        //     doc.setFontSize(8);
+        //     doc.setFont('helvetica', 'normal');
+        //     doc.setTextColor(128, 128, 128);
+        //     doc.text('HR Interview Assessment Report', 20, pageHeight - 5);
+        // }
+        
+        // Add a subtle line above footer
+        // doc.setLineWidth(0.1);
+        // doc.setDrawColor(200, 200, 200);
+        // doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
+        
+        // Add header line for continuation pages
+        // if (i > 1) {
+        //     doc.setLineWidth(0.1);
+        //     doc.setDrawColor(200, 200, 200);
+        //     doc.line(15, 15, pageWidth - 15, 15);
+            
+        //     // Add continuation header text
+        //     doc.setFontSize(8);
+        //     doc.setFont('helvetica', 'italic');
+        //     doc.setTextColor(100, 100, 100);
+        //     doc.text('Interview Assessment Report (continued)', pageWidth / 2, 10, { align: 'center' });
+        // }
+    }
+    
+    // Restore to current page
+    doc.setPage(currentPage);
+};
+
 // Add logo to PDF document
 const addLogoToDoc = (doc, logoData, x, y, width, height) => {
     try {
@@ -1332,17 +1384,30 @@ export const generatePDF = async (formData) => {
         doc.setLineWidth(0.2);
         doc.setDrawColor(0);
         doc.rect(chartBorderX, chartSectionStartY - 15, chartBorderWidth, chartBorderHeight);
-        // doc.rect(chartBorderX, chartSectionStartY - 5, chartBorderWidth, chartBorderHeight + 10);
         
-        // Add footer
+        // Add page numbers to all pages
+        addPageNumbers(doc);
+        
+        // Add footer on first page only
+        doc.setPage(1);
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
-        doc.text(
-            `Generated on: ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString()}`, 
-            20, 
-            pageHeight - 10
-        );
+        // doc.text(
+        //     `Generated on: ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString()}`, 
+        //     20, 
+        //     pageHeight - 20
+        // );
+
+        // Save PDF
+        // doc.setFontSize(8);
+        // doc.setFont('helvetica', 'normal');
+        // doc.setTextColor(0, 0, 0);
+        // doc.text(
+        //     `Generated on: ${new Date().toLocaleDateString('en-GB')} at ${new Date().toLocaleTimeString()}`, 
+        //     20, 
+        //     pageHeight - 10
+        // );
 
         // Save PDF
         const candidateData = formData.data_candidate || {};
