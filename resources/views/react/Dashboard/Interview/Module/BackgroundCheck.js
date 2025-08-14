@@ -146,15 +146,18 @@ export const BackgroundCheck = ({
 
     // Handle background check deletion
     const handleDelete = async () => {
+        console.log({
+            deletingCheck
+        });
         if (!deletingCheck) return;
-
+        
         try {
             const params = {
-                id: deletingCheck.id,
+                id: deletingCheck.background_check_id,
                 deleteBy: loginInfo?.employee?.name || "tidak dikenal"
             };
 
-            await apiDelete(endpoint, `/background-check/${deletingCheck.id}`, token, { params });
+            await apiDelete(endpoint, `/background-check/${deletingCheck.background_check_id}`, token, { params });
             
             toast.success('Background check deleted successfully!');
             setShowDeleteModal(false);
