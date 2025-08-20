@@ -146,9 +146,6 @@ export const BackgroundCheck = ({
 
     // Handle background check deletion
     const handleDelete = async () => {
-        console.log({
-            deletingCheck
-        });
         if (!deletingCheck) return;
         
         try {

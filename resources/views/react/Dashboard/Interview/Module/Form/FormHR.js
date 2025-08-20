@@ -40,10 +40,10 @@ export const FormHR = ({
         { key: 'habit_of_excellence', label: 'Habit of excellence' },
     ];
     const CSE_ASPECTS = [
-        { key: 'giving_meaning', label: 'Self Esteem' },
-        { key: 'love_to_learn', label: 'Self Efficacy' },
-        { key: 'happy_practice', label: 'Locus of control' },
-        { key: 'like_innovation', label: 'Emotional Stability' }
+        { key: 'giving_meaning', label: 'Self Esteem', defaultQuestion: 'Does this person believe in their own worth?' },
+        { key: 'love_to_learn', label: 'Self Efficacy', defaultQuestion: 'Does this person believe they have the ability to complete their work?' },
+        { key: 'happy_practice', label: 'Locus of control', defaultQuestion: 'Does this person believe their success is determined by their own actions or external factors?' },
+        { key: 'like_innovation', label: 'Emotional Stability', defaultQuestion: 'Can this person control their emotions?' }
     ];
     const SDT_ASPECTS = [
         { key: 'l2', label: 'L2 (External Regulation – Driven by rewards or punishments ( not ideal)' },
@@ -75,7 +75,7 @@ export const FormHR = ({
     const [formCSE, setFormCSE] = useState(
     CSE_ASPECTS.reduce((acc, aspect) => ({
             ...acc,
-            [aspect.key]: { point: '', question: '', remark: '' }
+            [aspect.key]: { point: '', question: aspect.defaultQuestion || '', remark: '' }
         }), {})
     );
     const [formSDT, setFormSDT] = useState(
@@ -164,7 +164,8 @@ export const FormHR = ({
                 ...acc,
                 [aspect.key]: {
                     point: matchingItem ? matchingItem.score.toString() : '',
-                    question: matchingItem ? matchingItem.question : '',
+                    // For CSE, always use default question, for others use saved question or default
+                    question: aspect.defaultQuestion ? aspect.defaultQuestion : (matchingItem ? matchingItem.question : ''),
                     remark: matchingItem ? matchingItem.answer : ''
                 }
             };
@@ -797,10 +798,15 @@ const QuestionSIAH = ({
                                                 <Form.Control
                                                     as="textarea"
                                                     placeholder="Question"
-                                                    style={{ height: '120px' }}
                                                     value={form[aspect.key].question}
                                                     onChange={e => handleChange(aspect.key, 'question', e.target.value)}
                                                     isInvalid={!!errors[aspect.key]}
+                                                    readOnly={titleForm === 'CSE'}
+                                                    style={{ 
+                                                        height: '120px',
+                                                        backgroundColor: titleForm === 'CSE' ? '#f8f9fa' : 'white',
+                                                        cursor: titleForm === 'CSE' ? 'not-allowed' : 'text'
+                                                    }}
                                                 />
                                                 <Form.Control.Feedback type="invalid">
                                                     Question is required.
