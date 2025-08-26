@@ -169,32 +169,6 @@ const addPageNumbers = (doc) => {
         const pageText = `Page ${i} of ${pageCount}`;
         const textWidth = doc.getTextWidth(pageText);
         doc.text(pageText, pageWidth - textWidth - 15, pageHeight - 5);
-        
-        // Add document title at bottom left (except first page)
-        // if (i > 1) {
-        //     doc.setFontSize(8);
-        //     doc.setFont('helvetica', 'normal');
-        //     doc.setTextColor(128, 128, 128);
-        //     doc.text('HR Interview Assessment Report', 20, pageHeight - 5);
-        // }
-        
-        // Add a subtle line above footer
-        // doc.setLineWidth(0.1);
-        // doc.setDrawColor(200, 200, 200);
-        // doc.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
-        
-        // Add header line for continuation pages
-        // if (i > 1) {
-        //     doc.setLineWidth(0.1);
-        //     doc.setDrawColor(200, 200, 200);
-        //     doc.line(15, 15, pageWidth - 15, 15);
-            
-        //     // Add continuation header text
-        //     doc.setFontSize(8);
-        //     doc.setFont('helvetica', 'italic');
-        //     doc.setTextColor(100, 100, 100);
-        //     doc.text('Interview Assessment Report (continued)', pageWidth / 2, 10, { align: 'center' });
-        // }
     }
     
     // Restore to current page
@@ -496,7 +470,7 @@ const generateManualAssessmentTable = (doc, formData, yPosition) => {
                     doc.addPage();
                     currentY = 10;
                     currentY = drawTableHeader(currentY);
-                    aspectHeaderDrawnOnCurrentPage = false;
+                    aspectHeaderDrawnOnCurrentPage = true;
                     
                     companyStartY = currentY;
                     currentSegmentIndex++;

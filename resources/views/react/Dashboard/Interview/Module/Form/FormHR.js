@@ -382,10 +382,10 @@ const QuestionSDT = ({
         }
     }, [isEditMode, editingFormData, interview_aspects]); // Removed selectedAspect from dependencies
 
-    const handleAspectChange = (aspectKey) => {
+    const handleAspectChangex = (aspectKey) => {
         setSelectedAspect(aspectKey);
         setErrors(prev => ({ ...prev, aspect: false }));
-        
+
         // Auto-set point based on selected aspect
         if (aspectKey) {
             const pointValue = getSDTPoint(aspectKey);
@@ -394,6 +394,10 @@ const QuestionSDT = ({
             // In create mode or when changing aspect, reset to default values
             const existingData = form[aspectKey] || {};
             
+        console.log({
+            field:aspectKey,
+            value: existingData
+        });
             setForm(prev => ({
                 ...prev,
                 [aspectKey]: {
@@ -405,8 +409,34 @@ const QuestionSDT = ({
         }
     };
 
+    const handleAspectChange = (e) => {
+        const aspectKey = e.target.value;
+        const nameValue = e.target.options[e.target.selectedIndex].text;
+        setSelectedAspect(aspectKey);
+        setErrors(prev => ({ ...prev, aspect: false }));
+
+        // Auto-set point based on selected aspect
+        if (aspectKey) {
+            const pointValue = getSDTPoint(aspectKey);
+            
+            // In edit mode, preserve existing data if changing to a different aspect
+            // In create mode or when changing aspect, reset to default values
+            const existingData = form[aspectKey] || {};
+
+            setForm(prev => ({
+                ...prev,
+                [aspectKey]: {
+                    point: pointValue.toString(),
+                    question: nameValue || '',
+                    remark: existingData.remark || ''
+                }
+            }));
+        }
+    };
+
     const handleFieldChange = (field, value) => {
         if (selectedAspect) {
+            
             setForm(prev => ({
                 ...prev,
                 [selectedAspect]: {
@@ -512,18 +542,19 @@ const QuestionSDT = ({
                         
                         {/* SDT Aspect Dropdown */}
                         <FloatingLabel controlId="sdtAspectSelect" label="Select SDT Aspect" className="mb-3 fs-14">
-                            <Form.Select
-                                value={selectedAspect}
-                                onChange={e => handleAspectChange(e.target.value)}
-                                isInvalid={!!errors.aspect}
-                            >
-                                <option value="">Choose SDT Aspect...</option>
-                                {interview_aspects.map(aspect => (
-                                    <option key={aspect.key} value={aspect.key}>
-                                        {aspect.label}
-                                    </option>
-                                ))}
-                            </Form.Select>
+                                <Form.Select
+                                    value={selectedAspect}
+                                    // onChange={e => handleAspectChange(e.target.value)}
+                                    onChange={handleAspectChange}
+                                    isInvalid={!!errors.aspect}
+                                >
+                                    <option value="">Choose SDT Aspect...</option>
+                                    {interview_aspects.map(aspect => (
+                                        <option key={aspect.key} value={aspect.key}>
+                                            {aspect.label}
+                                        </option>
+                                    ))}
+                                </Form.Select>
                             <Form.Control.Feedback type="invalid">
                                 Please select an SDT aspect.
                             </Form.Control.Feedback>
@@ -557,11 +588,12 @@ const QuestionSDT = ({
                                     <Form.Control
                                         as="textarea"
                                         placeholder="Question"
-                                        style={{ height: '120px' }}
                                         value={currentData.question || ''}
                                         onChange={e => handleFieldChange('question', e.target.value)}
                                         isInvalid={!!errors.question}
                                         disabled={!selectedAspect}
+                                        style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed', height: '120px' }}
+                                        readOnly
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         Question is required.

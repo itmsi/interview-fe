@@ -728,7 +728,8 @@ const AddSchduleInterview = ({ form, setForm }) => {
                     <DatePicker
                         selected={form.date}
                         onChange={date => setForm(f => ({ ...f, date }))}
-                        minDate={new Date()}
+                        // minDate={new Date()}
+                        minDate={new Date(new Date().getFullYear() - 50, 0, 1)}
                         dateFormat="dd MMM yyyy"
                         className="form-control h-field fs-14"
                         placeholderText="Select date"
@@ -756,7 +757,7 @@ const AddSchduleInterview = ({ form, setForm }) => {
                 <Col md={12}>
                     <Form.Label className='m-0 fs-14 color-label'>Assign</Form.Label>
                     <div className="d-flex flex-wrap gap-3">
-                        {['HR', 'GM', 'VP', 'BOD'].map(role => (
+                        {['HR', 'GM', 'VP', 'BOD', 'PUB'].map(role => (
                             <Form.Check
                                 key={role}
                                 type="checkbox"
