@@ -379,9 +379,10 @@ const LayoutCandidat = ({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * .1, duration: 0.4 }}
+                        className='h-100'
                     >
-                    <StyleListCandidate>
-                        <Card.Body>
+                    <StyleListCandidate className='h-100'>
+                        <Card.Body className='h-100'>
                             <div className='header-candidate d-flex'>
                                 {candidate?.image ? 
                                     <ImageProfileSrc
@@ -680,6 +681,7 @@ const StyleListCandidate = styled(Card) `
                     }
                     .titleRemark {
                         font-weight: 500;
+                        width: 60%;
                     }
                 }
             }
