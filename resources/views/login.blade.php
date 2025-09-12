@@ -47,13 +47,13 @@
                             class="form-control" 
                             id="floatingInput" 
                             placeholder="name@example.com"
-                            name="username"
-                            value="{{ $username ?? '' }}"
+                            name="email"
+                            value="{{ $email ?? '' }}"
                             required
                         />
-                        <label for="floatingInput">Username</label>
+                        <label for="floatingInput">Email</label>
                         <div class="invalid-feedback">
-                            Please enter your username.
+                            Please enter your email.
                         </div>
                     </div>
                     <div class="form-floating">
