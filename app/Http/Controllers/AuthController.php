@@ -17,11 +17,11 @@ class AuthController extends Controller
     {
         if ($req->isMethod('post')) {
             try {
-                $username = $req->username;
+                $email = $req->email;
                 $password = $req->password;
 
                 $data = [
-                    'username' => $username,
+                    'email' => $email,
                     'password' => $password,
                 ];
                 
@@ -61,14 +61,14 @@ class AuthController extends Controller
                     Log::warning('Login failed', ['login_response' => $login]);
                     // Login failed - return to login page with error
                     return view('login', [
-                        'username' => $username ?? '',
-                        'error' => 'Invalid username or password'
+                        'email' => $email ?? '',
+                        'error' => 'Invalid email or password'
                     ]);
                 }
             } catch (\Exception $e) {
                 Log::error('Login error: ' . $e->getMessage());
                 return view('login', [
-                    'username' => $username ?? '',
+                    'email' => $email ?? '',
                     'error' => 'Login failed. Please try again.'
                 ]);
             }
