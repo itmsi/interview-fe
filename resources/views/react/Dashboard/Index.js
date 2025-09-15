@@ -17,15 +17,11 @@ import { ListPaySlipTKA } from './Payslip/ListPaySlipTKA';
 const Index = (props) => {
     const { access_token, userInfo, system_access } = props;
     const [page, setPage] = useState('Dashboard');
-    console.log({
-        access_token, userInfo, system_access
-    });
-    
     // CUM Endpoint
     const BASE_URL = process.env.REACT_APP_ENDPOINT_APP;
 
     // INTERVIE Endpoint
-    const BASE_URL_INT = process.env.REACT_APP_ENDPOINT_APP_INTERVIEW;
+    const BASE_URL_INT = process.env.REACT_APP_ENDPOINT_DEV_APP_INTERVIEW;
     return (
         <Container fluid>
             <Row>

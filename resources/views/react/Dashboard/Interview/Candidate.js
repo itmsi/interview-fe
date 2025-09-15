@@ -135,11 +135,13 @@ export const Candidate = ({ endpoint, systems, token, setPage, loginInfo }) => {
             .then(data => {
                 setCandidates(data?.data || []);
                 setShowEdit(false);
+                setShowProfile(false);
                 setEditCandidate(null);
             })
             .catch(err => {
                 console.error('Error fetching updated candidates:', err);
                 setShowEdit(false);
+                setShowProfile(false);
                 setEditCandidate(null);
             });
     };
@@ -291,8 +293,24 @@ const LayoutCandidat = ({
         text: '',
         status: '',
         interviewer: '',
+        company: '',
+        department: '',
+        position: '',
         sort: 'latest'
     });
+
+    // Extract unique values for filter options
+    const getUniqueValues = (field) => {
+        const values = candidates
+            .map(candidate => candidate[field])
+            .filter(value => value && value.trim() !== '')
+            .sort();
+        return [...new Set(values)];
+    };
+
+    const uniqueCompanies = getUniqueValues('company');
+    const uniqueDepartments = getUniqueValues('department');
+    const uniquePositions = getUniqueValues('position');
 
     const handleShowProfile = (candidate) => {
         setSelectedCandidate(candidate);
@@ -306,12 +324,14 @@ const LayoutCandidat = ({
 
     const roleName = system?.roles?.[0]?.role_name;
     return(
-        <>
+        <FilterSection>
             <div className="d-flex justify-content-end align-items-center mb-3 action-create-candidate">
                 <button className="btn btn-outline-primary fs-14" onClick={() => setIsAdd(true)}>
                     <RiUserAddFill /> Add Candidate
                 </button>
             </div>
+            
+            {/* Search Bar */}
             <Row className="mb-4 g-3">
                 <Form.Group as={Col} className='col-lg-5 col-12'>
                     <Form.Control 
@@ -341,7 +361,7 @@ const LayoutCandidat = ({
                         onChange={(e) => setFilters({ ...filters, interviewer: e.target.value })}
                     >
                         <option value="">All Interviewers</option>
-                        {['HR', 'GM', 'VP', 'BOD'].map(role => (
+                        {['HR', 'GM', 'VP', 'BOD', 'PUB'].map(role => (
                         <option key={role} value={role}>{role}</option>
                         ))}
                     </Form.Select>
@@ -353,11 +373,146 @@ const LayoutCandidat = ({
                         className="fs-14 color-text"
                         onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
                     >
-                        <option value="latest">Sort by Latest</option>
-                        <option value="oldest">Sort by Oldest</option>
+                        <option value="latest">Latest First</option>
+                        <option value="oldest">Oldest First</option>
                     </Form.Select>
                 </Form.Group>
             </Row>
+            
+            {/* <div className="search-section">
+                <Row className="align-items-center">
+                    <Col lg={8} md={7} sm={12}>
+                        <Form.Control 
+                            type="text"
+                            className="fs-14 color-text"
+                            placeholder="Search by name, email, ID, or position..."
+                            onChange={(e) => setFilters({ ...filters, text: e.target.value.toLowerCase() })} 
+                        />
+                    </Col>
+                    <Col lg={4} md={5} sm={12} className="d-flex gap-2 mt-2 mt-md-0">
+                        <Form.Select 
+                            size="md" 
+                            className="fs-14 color-text"
+                            onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
+                            value={filters.sort}
+                        >
+                            <option value="latest">Latest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </Form.Select>
+                        <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => setFilters({
+                                text: '',
+                                status: '',
+                                interviewer: '',
+                                company: '',
+                                department: '',
+                                position: '',
+                                sort: 'latest'
+                            })}
+                            className="text-nowrap clear-filters-btn"
+                        >
+                            Clear All
+                        </Button>
+                    </Col>
+                </Row>
+            </div> */}
+
+            {/* Filter Row */}
+            {/* <div className="filter-row">
+                <Row className="g-2 align-items-center">
+                    <Col lg={2} md={4} sm={6} xs={12}>
+                        <Form.Select 
+                            size="sm"
+                            className="fs-14 color-text"
+                            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                            value={filters.status}
+                        >
+                            <option value="">All Status</option>
+                            {['Interviewed', 'Scheduled', 'Complete', 'New'].map(status => (
+                                <option key={status} value={status}>{status}</option>
+                            ))}
+                        </Form.Select>
+                    </Col>
+                    
+                    <Col lg={2} md={4} sm={6} xs={12}>
+                        <Form.Select 
+                            size="sm" 
+                            className="fs-14 color-text"
+                            onChange={(e) => setFilters({ ...filters, interviewer: e.target.value })}
+                            value={filters.interviewer}
+                        >
+                            <option value="">All Interviewers</option>
+                            {['HR', 'GM', 'VP', 'BOD', 'PUB'].map(role => (
+                            <option key={role} value={role}>{role}</option>
+                            ))}
+                        </Form.Select>
+                    </Col>
+
+                    <Col lg={2} md={4} sm={6} xs={12}>
+                        <Form.Select 
+                            size="sm" 
+                            className="fs-14 color-text"
+                            onChange={(e) => setFilters({ ...filters, company: e.target.value })}
+                            value={filters.company}
+                        >
+                            <option value="">All Companies</option>
+                            {uniqueCompanies.map(company => (
+                                <option key={company} value={company}>{company}</option>
+                            ))}
+                        </Form.Select>
+                    </Col>
+
+                    <Col lg={2} md={4} sm={6} xs={12}>
+                        <Form.Select 
+                            size="sm" 
+                            className="fs-14 color-text"
+                            onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+                            value={filters.department}
+                        >
+                            <option value="">All Departments</option>
+                            {uniqueDepartments.map(department => (
+                                <option key={department} value={department}>{department}</option>
+                            ))}
+                        </Form.Select>
+                    </Col>
+
+                    <Col lg={2} md={4} sm={6} xs={12}>
+                        <Form.Select 
+                            size="sm" 
+                            className="fs-14 color-text"
+                            onChange={(e) => setFilters({ ...filters, position: e.target.value })}
+                            value={filters.position}
+                        >
+                            <option value="">All Positions</option>
+                            {uniquePositions.map(position => (
+                                <option key={position} value={position}>{position}</option>
+                            ))}
+                        </Form.Select>
+                    </Col>
+
+                    <Col lg={2} md={4} sm={6} xs={12}>
+                        <div className="filter-counter text-center">
+                            <strong>
+                                {candidates
+                                    .filter(c => {
+                                        const q = filters.text;
+                                        const interviewerText = Array.isArray(c.interviewer) && c.interviewer.length > 0 ? c.interviewer.join(' ') : 'No interviewers';
+                                        const matchText = `${c.name} ${c.email} ${c.id_candidate} ${c.position} ${c.status} ${interviewerText}`.toLowerCase().includes(q);
+                                        const matchStatus = filters.status ? c.status === filters.status : true;
+                                        const matchInterviewer = filters.interviewer ? (Array.isArray(c.interviewer) && c.interviewer.includes(filters.interviewer)) : true;
+                                        const matchCompany = filters.company ? c.company === filters.company : true;
+                                        const matchDepartment = filters.department ? c.department === filters.department : true;
+                                        const matchPosition = filters.position ? c.position === filters.position : true;
+                                        return matchText && matchStatus && matchInterviewer && matchCompany && matchDepartment && matchPosition;
+                                    }).length
+                                }
+                            </strong> of <strong>{candidates.length}</strong> candidates
+                        </div>
+                    </Col>
+                </Row>
+            </div> */}
             <Row className='g-3'>
                 {candidates
                 .filter(c => {
@@ -366,7 +521,10 @@ const LayoutCandidat = ({
                     const matchText = `${c.name} ${c.email} ${c.id_candidate} ${c.position} ${c.status} ${interviewerText}`.toLowerCase().includes(q);
                     const matchStatus = filters.status ? c.status === filters.status : true;
                     const matchInterviewer = filters.interviewer ? (Array.isArray(c.interviewer) && c.interviewer.includes(filters.interviewer)) : true;
-                    return matchText && matchStatus && matchInterviewer;
+                    const matchCompany = filters.company ? c.company === filters.company : true;
+                    const matchDepartment = filters.department ? c.department === filters.department : true;
+                    const matchPosition = filters.position ? c.position === filters.position : true;
+                    return matchText && matchStatus && matchInterviewer && matchCompany && matchDepartment && matchPosition;
                 })
                 .sort((a, b) => {
                     const dA = new Date(a.date_applied);
@@ -411,6 +569,10 @@ const LayoutCandidat = ({
                                         <div className='titleRemark'>{candidate.company}</div>
                                     </li>
                                     <li>
+                                        <div className='titleRole'>Department</div>
+                                        <div className='titleRemark'>{candidate?.department ?? '-'}</div>
+                                    </li>
+                                    <li>
                                         <div className='titleRole'>Applied Role</div>
                                         <div className='titleRemark'>{candidate.position}</div>
                                     </li>
@@ -451,6 +613,7 @@ const LayoutCandidat = ({
                 </Col>
                 ))}
             </Row>
+            
             <StyleCanvas show={showProfile} onHide={handleCloseProfile} placement="end">
                 <Offcanvas.Header closeButton>
                     <Offcanvas.Title>
@@ -503,7 +666,7 @@ const LayoutCandidat = ({
                     />
                 </Offcanvas.Body>
             </StyleCanvas>
-        </>
+        </FilterSection>
     )
 }
 
@@ -512,8 +675,8 @@ const HeaderInformationProfile = ({ data }) => {
         {data && (
             <div className="card">
                 <div className="card-body">
-                    <div className="d-flex align-items-center flex-wrap flex-md-nowrap row-gap-3">
-                        <Row className="g-3 align-items-center">
+                    <div className="d-flex align-items-center flex-wrap flex-md-nowrap row-gap-3 w-100">
+                        <Row className="g-3 align-items-center row-cols-lg-5 w-100">
                             <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Candidate Name</p>
                                 <h6 className="fw-medium m-0 fs-14">{data.name}</h6>
@@ -521,6 +684,10 @@ const HeaderInformationProfile = ({ data }) => {
                             <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Company</p>
                                 <h6 className="fw-medium m-0 fs-14">{data.company}</h6>
+                            </div>
+                            <div className="col-md-3 col-sm-6 col-12">
+                                <p className="mb-1 color-label font-primary">Department</p>
+                                <h6 className="fw-medium m-0 fs-14">{data?.department ?? "-"}</h6>
                             </div>
                             <div className="col-md-3 col-sm-6 col-12">
                                 <p className="mb-1 color-label font-primary">Applied Role</p>
@@ -759,6 +926,65 @@ const StyleCanvas = styled(Offcanvas) `
                     line-height: 1;
                 }
             }
+        }
+    }
+`;
+
+// Add filter styling for better UI
+const FilterSection = styled.div`
+    .filter-row {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-select {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+        transition: all 0.15s ease-in-out;
+        
+        &:focus {
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        &:hover {
+            border-color: #b3d7ff;
+        }
+    }
+    
+    .search-section {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+    }
+    
+    .filter-counter {
+        background: #e3f2fd;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        color: #1976d2;
+        border: 1px solid #bbdefb;
+    }
+    
+    .clear-filters-btn {
+        border-radius: 6px;
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+        transition: all 0.15s ease-in-out;
+        
+        &:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
         }
     }
 `;

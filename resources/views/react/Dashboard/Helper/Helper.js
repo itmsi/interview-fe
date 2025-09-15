@@ -4,6 +4,7 @@ import { Tooltip as BsTooltip } from "bootstrap";
 import { useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import axios from 'axios';
 
 // Extend dayjs with plugins
 dayjs.extend(customParseFormat);
@@ -172,6 +173,40 @@ export const apiPatch = async(BASE_URL, endpoint, token, body = {}, options = {}
     return responseData;
 }
 
+export const apiPatchFormData = async (
+    BASE_URL,
+    endpoint,
+    token,
+    data,
+    options = {}
+) => {
+    let url = `${BASE_URL}${endpoint}`;
+
+    if (options.params && typeof options.params === "object") {
+        const query = new URLSearchParams(options.params).toString();
+        url += `?${query}`;
+    }
+
+    const formData = new FormData();
+    if (data instanceof FormData) {
+        data.forEach((value, key) => formData.append(key, value));
+    } else {
+        Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== "") {
+            formData.append(key, value);
+        }
+        });
+    }
+
+    const response = await axios.patch(url, formData, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+        },
+    });
+
+    return response.data;
+};
 export const apiDelete = async(BASE_URL, endpoint, token, options = {}) => {
     let url = `${BASE_URL}${endpoint}`;
     if (options.params && typeof options.params === 'object') {

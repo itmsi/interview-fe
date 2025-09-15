@@ -4,7 +4,7 @@ import { GrAttachment } from "react-icons/gr";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styled from 'styled-components';
-import { apiPost, apiPatch, apiPostFormData } from '../Helper/Helper';
+import { apiPost, apiPatch, apiPostFormData, apiGet, apiPatchFormData, apiPatchFormDataXHR } from '../Helper/Helper';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import dayjs from 'dayjs';
@@ -13,14 +13,28 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
     const [validated, setValidated] = useState(false);
     const isEdit = !!initialData; // Menentukan apakah mode edit atau add
 
+    const [company, setCompany] = useState([]);
+    const [errorsCompany, setErrorsCompany] = useState(false);
+    const [loadingCompany, setLoadingCompany] = useState(true);
+    const [departments, setDepartments] = useState([]);
+    const [errorsDept, setErrorsDept] = useState(false);
+    const [loadingDept, setLoadingDept] = useState(true);
+    const [jobrole, setJobrole] = useState([]);
+    const [errorsJob, setErrorsJob] = useState(false);
+    const [loadingJob, setLoadingJob] = useState(true);
+
     const [fileNamePhoto, setFileNamePhoto] = useState('');
     const [fileNameCV, setFileNameCV] = useState('');
     const [form, setForm] = useState({
         candidate_name: '',
         candidate_email: '',
         candidate_phone: '',
-        candidate_position: '',
+        candidate_title: '',
+        cum_title_id: '',
         candidate_company: '',
+        cum_companies_id: '',
+        candidate_department: '',
+        cum_departement_id: '',
         candidate_nationality: '',
         candidate_gender: '',
         candidate_religion: '',
@@ -34,7 +48,26 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
         candidate_foto: null,
         candidate_resume: null
     });
-
+    const endpointTest = `https://dev-cum-api.motorsights.com/api/v1`;
+    useEffect(() => {
+        apiGet(endpointTest, '/companies?limit=500', token)
+            .then(data => {
+                setLoadingCompany(false);
+                setErrorsCompany(false);
+                setCompany(data?.data || []);
+            })
+            .catch(err => {
+                console.error('Error fetching companies:', err);
+                setErrorsCompany(true);
+                setLoadingCompany(false);
+            });
+        
+        // Don't load departments initially - they will be loaded when company is selected
+        setLoadingDept(false);
+        
+        // Don't load job titles initially - they will be loaded when department is selected
+        setLoadingJob(false);
+    },[]);
     useEffect(() => {
         if (initialData) {
             setForm(prev => ({
@@ -42,8 +75,12 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
                 candidate_name: initialData.name || '',
                 candidate_email: initialData.email || '',
                 candidate_phone: initialData?.personal_information?.[0]?.candidate_phone ? initialData.personal_information[0].candidate_phone : '',
-                candidate_position: initialData.position || '',
+                candidate_title: initialData.position || '',
+                cum_title_id: initialData.position_id || '',
                 candidate_company: initialData.company || '',
+                cum_companies_id: initialData.company_id || '',
+                candidate_department: initialData.department || '',
+                cum_departement_id: initialData.department_id || '',
                 candidate_nationality: initialData?.personal_information?.[0]?.candidate_nationality ? initialData.personal_information[0].candidate_nationality : '',
                 candidate_gender: initialData?.personal_information?.[0]?.candidate_gender ? initialData.personal_information[0].candidate_gender : '',
                 candidate_religion: initialData?.personal_information?.[0]?.candidate_religion ? initialData.personal_information[0].candidate_religion : '',
@@ -68,12 +105,179 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
         }
     }, [initialData]);
 
+    // Separate useEffect to load departments and positions when editing and companies are loaded
+    useEffect(() => {
+        if (initialData && initialData.company && company.length > 0 && !loadingCompany) {
+            // Find company ID from company name
+            const selectedCompany = company.find(comp => comp.company_name === initialData.company);
+            const companyId = selectedCompany?.company_id;
+            
+            // Set company ID
+            setForm(prev => ({
+                ...prev,
+                cum_companies_id: companyId || ''
+            }));
+            
+            if (companyId) {
+                setLoadingDept(true);
+                setErrorsDept(false);
+                
+                apiGet(endpointTest, `/departement?limit=500&companies_id=${companyId}`, token)
+                    .then(data => {
+                        setLoadingDept(false);
+                        setErrorsDept(false);
+                        setDepartments(data?.data || []);
+                        
+                        // Find department ID and set both name and ID
+                        const selectedDepartment = data?.data?.find(dept => dept.departement_name === initialData.department);
+                        const departementId = selectedDepartment?.departement_id;
+                        
+                        setForm(prev => ({
+                            ...prev,
+                            candidate_department: initialData.department || '',
+                            cum_departement_id: departementId || ''
+                        }));
+
+                        // Load positions for the selected department when editing
+                        if (initialData.department && departementId) {
+                            setLoadingJob(true);
+                            setErrorsJob(false);
+                            
+                            apiGet(endpointTest, `/job-titles?limit=500&departement_id=${departementId}`, token)
+                                .then(jobData => {
+                                    setLoadingJob(false);
+                                    setErrorsJob(false);
+                                    setJobrole(jobData?.response?.result || []);
+                                    
+                                    // Find title ID and set both name and ID
+                                    const selectedJob = jobData?.response?.result?.find(job => job.job_title_name === initialData.position);
+                                    const titleId = selectedJob?.job_title_id;
+                                    
+                                    setForm(prev => ({
+                                        ...prev,
+                                        candidate_title: initialData.position || '',
+                                        cum_title_id: titleId || ''
+                                    }));
+                                })
+                                .catch(err => {
+                                    console.error('Error fetching job titles:', err);
+                                    setErrorsJob(true);
+                                    setLoadingJob(false);
+                                    setJobrole([]);
+                                });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching departments:', err);
+                        setErrorsDept(true);
+                        setLoadingDept(false);
+                        setDepartments([]);
+                    });
+            }
+        }
+    }, [initialData, company, loadingCompany]);
+
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
     const MAX_PDF_SIZE = 2 * 1024 * 1024;
 
+    // Reusable alphabetical sorting function
+    const sortAlphabetically = (array, key) => {
+        return [...array].sort((a, b) => {
+            const valueA = a[key]?.toLowerCase() || '';
+            const valueB = b[key]?.toLowerCase() || '';
+            return valueA.localeCompare(valueB);
+        });
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+        setForm((prev) => ({ 
+            ...prev, 
+            [name]: value,
+            // Reset department when company changes
+            ...(name === 'candidate_company' && { 
+                candidate_department: '', 
+                candidate_title: '',
+                cum_departement_id: '',
+                cum_title_id: ''
+            }),
+            // Reset position when department changes
+            ...(name === 'candidate_department' && { 
+                candidate_title: '',
+                cum_title_id: ''
+            })
+        }));
+        
+        // Store company ID when company is selected
+        if (name === 'candidate_company' && value) {
+            const selectedCompany = company.find(comp => comp.company_name === value);
+            const companyId = selectedCompany?.company_id;
+            
+            setForm(prev => ({
+                ...prev,
+                cum_companies_id: companyId || ''
+            }));
+            
+            if (companyId) {
+                setLoadingDept(true);
+                setErrorsDept(false);
+                setDepartments([]);
+                
+                apiGet(endpointTest, `/departement?limit=500&companies_id=${companyId}`, token)
+                    .then(data => {
+                        setLoadingDept(false);
+                        setErrorsDept(false);
+                        setDepartments(data?.data || []);
+                    })
+                    .catch(err => {
+                        console.error('Error fetching departments:', err);
+                        setErrorsDept(true);
+                        setLoadingDept(false);
+                        setDepartments([]);
+                    });
+            }
+        }
+
+        // Store department ID when department is selected
+        if (name === 'candidate_department' && value) {
+            const selectedDepartment = departments.find(dept => dept.departement_name === value);
+            const departementId = selectedDepartment?.departement_id;
+            
+            setForm(prev => ({
+                ...prev,
+                cum_departement_id: departementId || ''
+            }));
+            
+            if (departementId) {
+                setLoadingJob(true);
+                setErrorsJob(false);
+                setJobrole([]);
+                
+                apiGet(endpointTest, `/job-titles?limit=500&departement_id=${departementId}`, token)
+                    .then(data => {
+                        setLoadingJob(false);
+                        setErrorsJob(false);
+                        setJobrole(data?.response?.result || []);
+                    })
+                    .catch(err => {
+                        console.error('Error fetching job titles:', err);
+                        setErrorsJob(true);
+                        setLoadingJob(false);
+                        setJobrole([]);
+                    });
+            }
+        }
+
+        // Store title ID when title is selected
+        if (name === 'candidate_title' && value) {
+            const selectedJob = jobrole.find(job => job.job_title_name === value);
+            const titleId = selectedJob?.job_title_id;
+            
+            setForm(prev => ({
+                ...prev,
+                cum_title_id: titleId || ''
+            }));
+        }
     };
 
     const handleFileChange = (e) => {
@@ -119,7 +323,6 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
             return;
         }
 
-        // Persiapkan data untuk dikirim
         const submitData = { ...form };
         
         // Format date jika ada
@@ -135,32 +338,48 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
             const formData = new FormData();
             Object.keys(submitData).forEach(key => {
                 const value = submitData[key];
+                if (key === 'candidate_foto' || key === 'candidate_resume') {
+                    if (value instanceof File) {
+                        formData.append(key, value);
+                    }
+                } else if (value !== null && value !== undefined && value !== '') {
+                    formData.append(key, value);
+                }
+            });
+            dataToSend = formData;
+            
+        } else {
+            const formData = new FormData();
+            Object.keys(submitData).forEach(key => {
+                const value = submitData[key];
                 if (value !== null && value !== undefined && value !== '') {
                     formData.append(key, value);
                 }
             });
             dataToSend = formData;
-        } else {
-            // Bersihkan data kosong untuk JSON
-            dataToSend = Object.keys(submitData).reduce((acc, key) => {
-                const value = submitData[key];
-                if (value !== null && value !== undefined && value !== '') {
-                    acc[key] = value;
-                }
-                return acc;
-            }, {});
         }
 
         try {
             let response;
             if (isEdit) {
-                response = await apiPatch(endpoint, `/candidates/${initialData.id}/multipart`, token, dataToSend);
+                const params = {
+                    permissionName: "update",
+                    menuName: "candidate",
+                    systemName: "interview",
+                };
+                response = await apiPatchFormData(
+                    endpoint,
+                    `/candidates/${initialData.id}/multipart`,
+                    token,
+                    submitData,
+                    { params: params }
+                );
                 toast.success('Candidate updated successfully!');
             } else {
                 if (hasFile) {
                     response = await apiPostFormData(endpoint, '/candidates/multipart', token, dataToSend);
                 } else {
-                    response = await apiPost(endpoint, '/candidates/multipart', token, dataToSend);
+                    response = await apiPost(endpoint, '/candidates', token, submitData);
                 }
                 
                 toast.success('Candidate created successfully!');
@@ -251,26 +470,69 @@ export const CreateCandidateForm = ({ endpoint, token, onSave, onCancel, initial
                 
                 <Col md={6}>
                     <FloatingLabel label="Company">
-                        <Form.Control 
-                            name="candidate_company" 
-                            value={form.candidate_company}
-                            onChange={handleChange}
-                            placeholder="Enter your company name"
-                            required
-                        />
+                        <Form.Select name="candidate_company" value={form.candidate_company} onChange={handleChange} required disabled={loadingCompany}>
+                            <option value="">
+                                {loadingCompany ? "Loading companies..." : errorsCompany ? "Error loading companies" : "-- Choose Company --"}
+                            </option>
+                            {!loadingCompany && !errorsCompany && sortAlphabetically(company, 'company_name').map(comp => (
+                                // <option key={comp.company_id} value={comp.company_id}>{comp.company_name}</option>
+                                <option key={comp.company_id} value={comp.company_name} data-company-id={comp.company_id}>{comp.company_name}</option>
+                            ))}
+                        </Form.Select>
                         <Form.Control.Feedback type="invalid">Company is required.</Form.Control.Feedback>
                     </FloatingLabel>
                 </Col>
 
                 <Col md={6}>
+                    <FloatingLabel label="Department">
+                        <Form.Select 
+                            name="candidate_department" 
+                            value={form.candidate_department} 
+                            onChange={handleChange} 
+                            required 
+                            disabled={loadingDept || !form.candidate_company}
+                        >
+                            <option value="">
+                                {!form.candidate_company 
+                                    ? "Please select a company first" 
+                                    : loadingDept 
+                                        ? "Loading departments..." 
+                                        : errorsDept 
+                                            ? "Error loading departments" 
+                                            : "-- Choose Department --"
+                                }
+                            </option>
+                            {!loadingDept && !errorsDept && form.candidate_company && sortAlphabetically(departments, 'departement_name').map(department => (
+                                <option key={department.departement_id} value={department.departement_name}>{department.departement_name}</option>
+                            ))}
+                        </Form.Select>
+                        <Form.Control.Feedback type="invalid">Department is required.</Form.Control.Feedback>
+                    </FloatingLabel>
+                </Col>
+
+                <Col md={6}>
                     <FloatingLabel label="Position">
-                        <Form.Control 
-                            name="candidate_position" 
-                            value={form.candidate_position}
-                            onChange={handleChange}
-                            placeholder="Enter your position"
-                            required
-                        />
+                        <Form.Select 
+                            name="candidate_title" 
+                            value={form.candidate_title} 
+                            onChange={handleChange} 
+                            required 
+                            disabled={loadingJob || !form.candidate_department}
+                        >
+                            <option value="">
+                                {!form.candidate_department 
+                                    ? "Please select a department first" 
+                                    : loadingJob 
+                                        ? "Loading positions..." 
+                                        : errorsJob 
+                                            ? "Error loading positions" 
+                                            : "-- Choose Position --"
+                                }
+                            </option>
+                            {!loadingJob && !errorsJob && form.candidate_department && sortAlphabetically(jobrole, 'job_title_name').map(job => (
+                                <option key={job.job_title_id} value={job.job_title_name}>{job.job_title_name}</option>
+                            ))}
+                        </Form.Select>
                         <Form.Control.Feedback type="invalid">Position is required.</Form.Control.Feedback>
                     </FloatingLabel>
                 </Col>
